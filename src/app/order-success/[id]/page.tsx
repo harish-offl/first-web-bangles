@@ -5,6 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 
 import { getCatalog } from "@/lib/data";
 import { formatPrice } from "@/lib/site";
+import { orderStatusLabel, paymentStatusLabel } from "@/lib/orders/lifecycle";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -35,8 +36,12 @@ export default async function OrderSuccessPage({ params }: { params: Promise<{ i
             <dd className="font-medium">{order.order_number}</dd>
           </div>
           <div className="flex justify-between border-b pb-2">
+            <dt className="text-muted-foreground">Order status</dt>
+            <dd className="font-medium">{orderStatusLabel(order.status)}</dd>
+          </div>
+          <div className="flex justify-between border-b pb-2">
             <dt className="text-muted-foreground">Payment status</dt>
-            <dd className="font-medium">{order.payment_status}</dd>
+            <dd className="font-medium">{paymentStatusLabel(order.payment_status)}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Total</dt>

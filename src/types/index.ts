@@ -187,6 +187,15 @@ export type OrderStatus =
   | "stock_unavailable"
   | "returned";
 
+export type PaymentStatus =
+  | "pending"
+  | "authorized"
+  | "paid"
+  | "failed"
+  | "refund_initiated"
+  | "refunded"
+  | "partially_refunded";
+
 export interface Order {
   id: string;
   order_number: string;
@@ -195,9 +204,10 @@ export interface Order {
   customer_email?: string | null;
   customer_phone: string | null;
   shipping_address: string | null;
+  shipping_pincode?: string | null;
   customer_state: string | null;
   status: OrderStatus;
-  payment_status?: "pending" | "authorized" | "paid" | "failed" | "refunded" | "partially_refunded";
+  payment_status?: PaymentStatus | null;
   currency: string;
   subtotal: number;
   shipping_fee?: number;
@@ -230,8 +240,8 @@ export interface Order {
 export interface OrderStatusHistory {
   id: string;
   order_id: string;
-  previous_status: string | null;
-  new_status: string;
+  previous_status: OrderStatus | null;
+  new_status: OrderStatus;
   customer_message: string | null;
   internal_note: string | null;
   courier_name: string | null;
@@ -256,9 +266,17 @@ export interface CustomerNotification {
 
 export interface UpdateOrderLifecycleInput {
   orderId: string;
+  status?: OrderStatus;
+  paymentStatus?: PaymentStatus;
   deliveryStage?: string | null;
+  courierName?: string | null;
   courierPartner?: string | null;
   trackingId?: string | null;
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
+  estimatedDelivery?: string | null;
+  customerMessage?: string | null;
+  internalNote?: string | null;
   updatedBy: string;
 }
 

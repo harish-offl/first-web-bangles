@@ -6,7 +6,9 @@ import path from "node:path";
 import { DEFAULT_SETTINGS } from "@/lib/site";
 import {
   DEFAULT_STATUS_MESSAGES,
+  ORDER_STATUS_LABELS,
   assertValidTransition,
+  statusToDeliveryStage,
   type OrderStatus,
 } from "@/lib/orders/lifecycle";
 import { GLASS_COLOUR_PALETTE } from "@/lib/glass-colours";
@@ -499,15 +501,28 @@ export const localDriver: CatalogDriver = {
   },
 
   async listOrders(options = {}): Promise<Order[]> {
-    const orders = readOrders();
-    const filtered = options.status ? orders.filter((o) => o.status === options.status) : orders;
+    const term = options.q?.trim().toLowerCase();
+    const filtered = readOrders().filter((order) => {
+      if (options.status && order.status !== options.status) return false;
+      if (options.paymentStatus && order.payment_status !== options.paymentStatus) return false;
+      if (!term) return true;
+      return [order.order_number, order.customer_name, order.customer_phone]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(term));
+    });
     return [...filtered].sort((a, b) => b.created_at.localeCompare(a.created_at));
   },
 
   async listOrdersPage(options = {}): Promise<Paginated<Order>> {
-    const filtered = options.status
-      ? readOrders().filter((o) => o.status === options.status)
-      : readOrders();
+    const term = options.q?.trim().toLowerCase();
+    const filtered = readOrders().filter((order) => {
+      if (options.status && order.status !== options.status) return false;
+      if (options.paymentStatus && order.payment_status !== options.paymentStatus) return false;
+      if (!term) return true;
+      return [order.order_number, order.customer_name, order.customer_phone]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(term));
+    });
     const sorted = [...filtered].sort((a, b) => b.created_at.localeCompare(a.created_at));
     const pageSize = Math.min(Math.max(options.pageSize ?? 25, 1), 100);
     const page = Math.max(options.page ?? 1, 1);
@@ -545,10 +560,13 @@ export const localDriver: CatalogDriver = {
       order_number: nextOrderNumber(orders),
       customer_id: input.customerId,
       customer_name: input.customerName,
+      customer_email: input.customerEmail ?? null,
       customer_phone: input.customerPhone,
       shipping_address: input.customerAddress,
+      shipping_pincode: input.customerPincode ?? null,
       customer_state: input.customerState,
       status: "pending",
+      payment_status: "pending",
       currency: input.currency,
       subtotal: input.subtotal,
       total_amount: input.subtotal,
@@ -594,16 +612,94 @@ export const localDriver: CatalogDriver = {
       ...current,
       updated_at: timestamp,
     };
+    let statusChanged = false;
+
+    if (input.status && input.status !== current.status) {
+      assertValidTransition(current.status, input.status);
+      updated.status = input.status;
+      statusChanged = true;
+
+      const stage = statusToDeliveryStage(input.status);
+      if (stage) updated.delivery_stage = stage;
+
+      if (input.status === "confirmed" && !current.confirmed_at) updated.confirmed_at = timestamp;
+      if (input.status === "processing" && !current.processing_at) updated.processing_at = timestamp;
+      if (input.status === "shipped" && !current.shipped_at) updated.shipped_at = timestamp;
+      if (input.status === "delivered" && !current.delivered_at) updated.delivered_at = timestamp;
+      if (input.status === "cancelled" && !current.cancelled_at) updated.cancelled_at = timestamp;
+    }
 
     if (input.deliveryStage !== undefined) updated.delivery_stage = input.deliveryStage;
-    if (input.courierPartner !== undefined) updated.courier_partner = input.courierPartner;
-    if (input.trackingId !== undefined) updated.tracking_id = input.trackingId;
-    if (input.deliveryStage || input.courierPartner || input.trackingId) {
+    const courierName =
+      input.courierName !== undefined ? input.courierName : input.courierPartner;
+    if (courierName !== undefined) {
+      updated.courier_name = courierName;
+      updated.courier_partner = courierName;
+    }
+    const trackingNumber =
+      input.trackingNumber !== undefined ? input.trackingNumber : input.trackingId;
+    if (trackingNumber !== undefined) {
+      updated.tracking_number = trackingNumber;
+      updated.tracking_id = trackingNumber;
+    }
+    if (input.trackingUrl !== undefined) updated.courier_tracking_url = input.trackingUrl;
+    if (input.estimatedDelivery !== undefined) {
+      updated.estimated_delivery = input.estimatedDelivery;
+    }
+    if (input.paymentStatus) updated.payment_status = input.paymentStatus;
+    if (
+      input.courierName !== undefined ||
+      input.courierPartner !== undefined ||
+      input.trackingNumber !== undefined ||
+      input.trackingId !== undefined ||
+      input.trackingUrl !== undefined ||
+      input.estimatedDelivery !== undefined
+    ) {
       updated.tracking_updated_at = timestamp;
     }
 
     orders[idx] = updated;
     writeOrders(orders);
+
+    if (statusChanged && input.status) {
+      const message =
+        input.customerMessage?.trim() ||
+        DEFAULT_STATUS_MESSAGES[input.status] ||
+        ORDER_STATUS_LABELS[input.status] ||
+        "Order status updated.";
+      const history = readOrderHistory();
+      history.push({
+        id: `local-history-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        order_id: updated.id,
+        previous_status: current.status,
+        new_status: input.status,
+        customer_message: message,
+        internal_note: input.internalNote?.trim() || null,
+        courier_name: courierName ?? current.courier_name ?? null,
+        tracking_number: trackingNumber ?? current.tracking_number ?? null,
+        tracking_url: input.trackingUrl ?? current.courier_tracking_url ?? null,
+        estimated_delivery: input.estimatedDelivery ?? current.estimated_delivery ?? null,
+        updated_by: input.updatedBy,
+        created_at: timestamp,
+      });
+      writeOrderHistory(history);
+
+      if (updated.customer_id) {
+        const notifications = readNotifications();
+        notifications.push({
+          id: `local-notification-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          customer_id: updated.customer_id,
+          order_id: updated.id,
+          title: `Order ${ORDER_STATUS_LABELS[input.status] ?? input.status}`,
+          message,
+          notification_type: "order_status",
+          is_read: false,
+          read_at: null,
+          created_at: timestamp,
+        });
+        writeNotifications(notifications);
+      }
+    }
 
     return updated;
   },
@@ -801,6 +897,13 @@ export const localDriver: CatalogDriver = {
   async listOrderStatusHistory(orderId: string): Promise<OrderStatusHistory[]> {
     return readOrderHistory()
       .filter((h) => h.order_id === orderId)
+      .sort((a, b) => a.created_at.localeCompare(b.created_at));
+  },
+
+  async listOrderStatusHistoryForOrders(orderIds: string[]): Promise<OrderStatusHistory[]> {
+    const wanted = new Set(orderIds);
+    return readOrderHistory()
+      .filter((h) => wanted.has(h.order_id))
       .sort((a, b) => a.created_at.localeCompare(b.created_at));
   },
 

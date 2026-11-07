@@ -8,6 +8,7 @@ import type {
   OrderStatus,
   OrderStatusHistory,
   Paginated,
+  PaymentStatus,
   Product,
   ProductColour,
   ProductVariant,
@@ -80,8 +81,10 @@ export interface OrderItemInput {
 export interface OrderInput {
   customerId: string | null;
   customerName: string | null;
+  customerEmail: string | null;
   customerPhone: string | null;
   customerAddress: string | null;
+  customerPincode: string | null;
   customerState: string | null;
   notes: string | null;
   currency: string;
@@ -138,9 +141,15 @@ export interface CatalogDriver {
     colours: ProductColourInput[],
   ): Promise<ProductColour[]>;
 
-  listOrders(options?: { status?: OrderStatus }): Promise<Order[]>;
+  listOrders(options?: {
+    status?: OrderStatus;
+    paymentStatus?: PaymentStatus;
+    q?: string;
+  }): Promise<Order[]>;
   listOrdersPage(options?: {
     status?: OrderStatus;
+    paymentStatus?: PaymentStatus;
+    q?: string;
     page?: number;
     pageSize?: number;
   }): Promise<Paginated<Order>>;
@@ -159,6 +168,9 @@ export interface CatalogDriver {
 
   /** Append-only audit trail for a single order, oldest first. */
   listOrderStatusHistory(orderId: string): Promise<OrderStatusHistory[]>;
+
+  /** Append-only audit trail for multiple orders, oldest first. */
+  listOrderStatusHistoryForOrders(orderIds: string[]): Promise<OrderStatusHistory[]>;
 
   /** Orders belonging to a customer, newest first. */
   listCustomerOrders(customerId: string): Promise<Order[]>;

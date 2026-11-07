@@ -16,6 +16,7 @@ interface OrderCustomer {
   email: string | null;
   phone: string | null;
   address: string | null;
+  pincode: string | null;
   state: string | null;
 }
 
@@ -95,12 +96,14 @@ async function handleCreateOrder(request: Request) {
     typeof customer.phone === "string" ? customer.phone.trim() || null : null;
   const shippingAddress =
     typeof customer.address === "string" ? customer.address.trim() || null : null;
+  const customerPincode =
+    typeof customer.pincode === "string" ? customer.pincode.trim() || null : null;
   const customerState =
     typeof customer.state === "string" ? customer.state.trim() || null : null;
 
-  if (!customerName || !customerPhone || !shippingAddress) {
+  if (!customerName || !customerPhone || !shippingAddress || !customerPincode) {
     return NextResponse.json(
-      { error: "Name, phone and delivery address are required." },
+      { error: "Name, phone, delivery address and PIN code are required." },
       { status: 400 },
     );
   }
@@ -128,8 +131,10 @@ async function handleCreateOrder(request: Request) {
   const created = await getCatalog().createOrder({
     customerId: customerIdentity?.userId ?? null,
     customerName,
+    customerEmail,
     customerPhone,
     customerAddress: shippingAddress,
+    customerPincode,
     customerState,
     notes: parsed.data.note ?? null,
     currency: settings.currency,
@@ -184,6 +189,7 @@ async function handleCreateOrder(request: Request) {
       payment_status: "pending",
       customer_email: customerEmail ?? null,
       shipping_address: shippingAddress ?? null,
+      shipping_pincode: customerPincode ?? null,
       shipping_fee_paise: shippingFeePaise,
       discount_paise: discountPaise,
       total_amount: totalPaise / 100,

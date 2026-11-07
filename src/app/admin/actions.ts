@@ -10,7 +10,11 @@ import {
 import { getCatalog } from "@/lib/data";
 import { normalizeImageSource } from "@/lib/images/url";
 import { isGlassBanglesCategory } from "@/lib/product-sizes";
-import { assertValidTransition } from "@/lib/orders/lifecycle";
+import {
+  DEFAULT_STATUS_MESSAGES,
+  PAYMENT_STATUSES,
+  assertValidTransition,
+} from "@/lib/orders/lifecycle";
 import { getServiceRoleClient, isServiceRoleConfigured } from "@/lib/supabase/service-role";
 import {
   categoryInputSchema,
@@ -21,6 +25,7 @@ import type { ActionState } from "@/lib/admin/action-state";
 import type {
   ColourImage,
   OrderStatus,
+  PaymentStatus,
   Product,
   Paginated,
   ProductFilters,
@@ -610,7 +615,7 @@ export async function searchAssignableProducts({
 }
 
 export async function updateOrderStatusAction(formData: FormData): Promise<void> {
-  await requireAdminAccess();
+  const access = await requireAdminAccess();
   const id = optionalString(formData.get("id"));
   const status = optionalString(formData.get("status")) as OrderStatus | null;
   if (!id || !status || !ORDER_STATUSES.includes(status)) {
@@ -624,7 +629,14 @@ export async function updateOrderStatusAction(formData: FormData): Promise<void>
     }
     if (order.status !== status) {
       assertValidTransition(order.status, status);
-      await catalog.updateOrderStatus(id, status);
+      await catalog.updateOrderLifecycle({
+        orderId: id,
+        status,
+        customerMessage: DEFAULT_STATUS_MESSAGES[status],
+        updatedBy: access.identity?.userId ?? "local-admin",
+      });
+      revalidatePath("/admin/orders");
+      revalidatePath("/track-order");
     }
   } catch {
     redirect("/admin/orders?error=1");
@@ -659,23 +671,44 @@ export async function updateOrderLifecycleAction(
       return { status: "error", message: "Order not found." };
     }
 
-    const deliveryStage = optionalString(formData.get("deliveryStage")) || undefined;
-    const courierPartner = optionalString(formData.get("courierPartner")) || undefined;
-    const trackingId = optionalString(formData.get("trackingId")) || undefined;
+    const statusValue = optionalString(formData.get("status"));
+    const status = (statusValue ?? order.status) as OrderStatus;
+    if (!ORDER_STATUSES.includes(status)) {
+      return { status: "error", message: "Invalid order status." };
+    }
+
+    const paymentValue = optionalString(formData.get("paymentStatus"));
+    const paymentStatus = paymentValue as PaymentStatus | null;
+    if (paymentStatus && !PAYMENT_STATUSES.includes(paymentStatus)) {
+      return { status: "error", message: "Invalid payment status." };
+    }
+
+    const estimatedValue = optionalString(formData.get("estimatedDelivery"));
+    const estimatedDelivery = estimatedValue
+      ? new Date(`${estimatedValue}T00:00:00+05:30`).toISOString()
+      : null;
 
     await catalog.updateOrderLifecycle({
       orderId: order.id,
-      deliveryStage,
-      courierPartner,
-      trackingId,
+      status,
+      paymentStatus: paymentStatus ?? undefined,
+      courierName: optionalString(formData.get("courierName")),
+      trackingNumber: optionalString(formData.get("trackingNumber")),
+      trackingUrl: optionalString(formData.get("trackingUrl")),
+      estimatedDelivery,
+      customerMessage: optionalString(formData.get("customerMessage")),
+      internalNote: optionalString(formData.get("internalNote")),
       updatedBy: access.identity?.userId ?? "local-admin",
     });
 
     revalidatePath("/admin/orders");
+    revalidatePath("/track-order");
     revalidatePath("/account/orders");
-    revalidatePath("/order/[id]");
 
-    return { status: "success", message: "Order tracking updated." };
+    return {
+      status: "success",
+      message: status === order.status ? "Order details updated." : "Order status updated.",
+    };
   } catch (error) {
     if (error instanceof AdminAccessError) {
       return { status: "error", message: error.message };

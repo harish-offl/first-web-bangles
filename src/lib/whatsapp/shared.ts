@@ -35,10 +35,19 @@ export function normaliseWhatsAppNumber(raw: string | null | undefined): string 
   if (!raw) return null;
   let digits = raw.replace(/\D/g, "");
   if (!digits) return null;
-  // Drop a leading country-code duplicate (e.g. "0091..." -> "91...")
+  // Drop international dialling prefixes and the Indian trunk prefix.
   if (digits.startsWith("00")) digits = digits.slice(2);
-  // Assume Indian numbers given the business location when no country code is present.
-  if (digits.length === 10) digits = `91${digits}`;
+  if (digits.startsWith("0")) digits = digits.replace(/^0+/, "");
+
+  if (digits.length === 10) return `91${digits}`;
+  if (digits.length === 12 && digits.startsWith("91")) return digits;
+
+  // Handles stored numbers with duplicated country codes such as 91 91 XXXXXXXXXX.
+  if (digits.length > 10) {
+    const local = digits.slice(-10);
+    if (/^[6-9]\d{9}$/.test(local)) return `91${local}`;
+  }
+
   if (digits.length < 10 || digits.length > 15) return null;
   return digits;
 }

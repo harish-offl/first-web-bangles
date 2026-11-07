@@ -3,6 +3,13 @@
 import { unstable_cache } from "next/cache";
 
 import { DEFAULT_SETTINGS } from "@/lib/site";
+import {
+  DEFAULT_STATUS_MESSAGES,
+  ORDER_STATUS_LABELS,
+  PAYMENT_STATUSES,
+  assertValidTransition,
+  statusToDeliveryStage,
+} from "@/lib/orders/lifecycle";
 import { getAnonServerClient } from "@/lib/supabase/anon-server";
 import type {
   Category,
@@ -626,6 +633,13 @@ export const supabaseDriver: CatalogDriver = {
       .select("*, items:order_items(*)")
       .order("created_at", { ascending: false });
     if (options.status) query = query.eq("status", options.status);
+    if (options.paymentStatus) query = query.eq("payment_status", options.paymentStatus);
+    const term = options.q ? sanitizeSearch(options.q) : "";
+    if (term) {
+      query = query.or(
+        `order_number.ilike.%${term}%,customer_name.ilike.%${term}%,customer_phone.ilike.%${term}%`,
+      );
+    }
 
     const { data, error } = await query;
     if (error) throw new Error(`Failed to list enquiries: ${error.message}`);
@@ -640,9 +654,16 @@ export const supabaseDriver: CatalogDriver = {
 
     let query = supabase
       .from("orders")
-      .select("*", { count: "exact" })
+      .select("*, items:order_items(*)", { count: "exact" })
       .order("created_at", { ascending: false });
     if (options.status) query = query.eq("status", options.status);
+    if (options.paymentStatus) query = query.eq("payment_status", options.paymentStatus);
+    const term = options.q ? sanitizeSearch(options.q) : "";
+    if (term) {
+      query = query.or(
+        `order_number.ilike.%${term}%,customer_name.ilike.%${term}%,customer_phone.ilike.%${term}%`,
+      );
+    }
 
     const from = (page - 1) * pageSize;
     const { data, error, count } = await query.range(from, from + pageSize - 1);
@@ -692,10 +713,13 @@ export const supabaseDriver: CatalogDriver = {
       .insert({
         customer_id: input.customerId,
         customer_name: input.customerName,
+        customer_email: input.customerEmail ?? null,
         customer_phone: input.customerPhone,
         shipping_address: input.customerAddress,
+        shipping_pincode: input.customerPincode ?? null,
         customer_state: input.customerState,
         status: "pending",
+        payment_status: "pending",
         currency: input.currency,
         subtotal: input.subtotal,
         total_amount: input.subtotal,
@@ -743,16 +767,73 @@ export const supabaseDriver: CatalogDriver = {
     const { getServiceRoleClient } = await import("@/lib/supabase/service-role");
     const supabase = getServiceRoleClient();
 
-    const now = new Date().toISOString();
-    const update: Record<string, unknown> = {
-      updated_at: now,
-    };
+    const { data: current, error: readError } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", input.orderId)
+      .maybeSingle();
+    if (readError) throw new Error(readError.message);
+    if (!current) throw new Error("Order not found.");
 
-    if (input.deliveryStage !== undefined) update.delivery_stage = input.deliveryStage;
-    if (input.courierPartner !== undefined) update.courier_partner = input.courierPartner;
-    if (input.trackingId !== undefined) update.tracking_id = input.trackingId;
-    if (input.deliveryStage || input.courierPartner || input.trackingId) {
+    const previousStatus = current.status as OrderStatus;
+    const now = new Date().toISOString();
+    const update: Record<string, unknown> = { updated_at: now };
+    let statusChanged = false;
+
+    if (input.status && input.status !== previousStatus) {
+      assertValidTransition(previousStatus, input.status);
+      update.status = input.status;
+      statusChanged = true;
+
+      const stage = statusToDeliveryStage(input.status);
+      if (stage) update.delivery_stage = stage;
+
+      if (input.status === "confirmed" && !current.confirmed_at) update.confirmed_at = now;
+      if (input.status === "processing" && !current.processing_at) update.processing_at = now;
+      if (input.status === "shipped" && !current.shipped_at) update.shipped_at = now;
+      if (input.status === "delivered" && !current.delivered_at) update.delivered_at = now;
+      if (input.status === "cancelled" && !current.cancelled_at) update.cancelled_at = now;
+    }
+
+    if (input.deliveryStage !== undefined) {
+      update.delivery_stage = input.deliveryStage || null;
+    }
+
+    const courierName =
+      input.courierName !== undefined ? input.courierName : input.courierPartner;
+    if (courierName !== undefined) {
+      update.courier_name = courierName || null;
+      update.courier_partner = courierName || null;
+    }
+
+    const trackingNumber =
+      input.trackingNumber !== undefined ? input.trackingNumber : input.trackingId;
+    if (trackingNumber !== undefined) {
+      update.tracking_number = trackingNumber || null;
+      update.tracking_id = trackingNumber || null;
+    }
+
+    if (input.trackingUrl !== undefined) update.courier_tracking_url = input.trackingUrl || null;
+    if (input.estimatedDelivery !== undefined) {
+      update.estimated_delivery = input.estimatedDelivery || null;
+    }
+
+    if (
+      input.courierName !== undefined ||
+      input.courierPartner !== undefined ||
+      input.trackingNumber !== undefined ||
+      input.trackingId !== undefined ||
+      input.trackingUrl !== undefined ||
+      input.estimatedDelivery !== undefined
+    ) {
       update.tracking_updated_at = now;
+    }
+
+    if (input.paymentStatus) {
+      if (!PAYMENT_STATUSES.includes(input.paymentStatus)) {
+        throw new Error("Invalid payment status.");
+      }
+      update.payment_status = input.paymentStatus;
     }
 
     const { data, error } = await supabase
@@ -763,7 +844,50 @@ export const supabaseDriver: CatalogDriver = {
       .single();
     if (error) throw new Error(error.message);
 
-    return data as Order;
+    const updated = data as Order;
+
+    if (statusChanged && input.status) {
+      const message =
+        input.customerMessage?.trim() ||
+        DEFAULT_STATUS_MESSAGES[input.status] ||
+        ORDER_STATUS_LABELS[input.status] ||
+        "Order status updated.";
+      const updatedBy = /^[0-9a-f-]{36}$/i.test(input.updatedBy) ? input.updatedBy : null;
+
+      const { error: historyError } = await supabase.from("order_status_history").insert({
+        order_id: input.orderId,
+        previous_status: previousStatus,
+        new_status: input.status,
+        customer_message: message,
+        internal_note: input.internalNote?.trim() || null,
+        courier_name: courierName || current.courier_name || null,
+        tracking_number: trackingNumber || current.tracking_number || null,
+        tracking_url: input.trackingUrl || current.courier_tracking_url || null,
+        estimated_delivery:
+          input.estimatedDelivery || current.estimated_delivery || null,
+        updated_by: updatedBy,
+      });
+      if (historyError) {
+        throw new Error(`Order updated but history could not be saved: ${historyError.message}`);
+      }
+
+      if (updated.customer_id) {
+        const { error: notificationError } = await supabase
+          .from("customer_notifications")
+          .insert({
+            customer_id: updated.customer_id,
+            order_id: updated.id,
+            title: `Order ${ORDER_STATUS_LABELS[input.status] ?? input.status}`,
+            message,
+            notification_type: "order_status",
+          });
+        if (notificationError) {
+          console.error("Customer notification failed:", notificationError.message);
+        }
+      }
+    }
+
+    return updated;
   },
 
   async updateVariantStock(
@@ -960,6 +1084,19 @@ export const supabaseDriver: CatalogDriver = {
       .from("order_status_history")
       .select("*")
       .eq("order_id", orderId)
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    return (data ?? []) as OrderStatusHistory[];
+  },
+
+  async listOrderStatusHistoryForOrders(orderIds: string[]): Promise<OrderStatusHistory[]> {
+    if (orderIds.length === 0) return [];
+    const { getServiceRoleClient } = await import("@/lib/supabase/service-role");
+    const supabase = getServiceRoleClient();
+    const { data, error } = await supabase
+      .from("order_status_history")
+      .select("*")
+      .in("order_id", orderIds)
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
     return (data ?? []) as OrderStatusHistory[];

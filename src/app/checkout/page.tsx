@@ -86,6 +86,7 @@ export default function CheckoutPage() {
     email: "",
     phone: "",
     address: "",
+    pincode: "",
     state: "Tamil Nadu",
   });
 
@@ -129,6 +130,12 @@ export default function CheckoutPage() {
 
   async function createOrder() {
     setError(null);
+    const pincode = form.pincode.trim();
+    if (!/^\d{6}$/.test(pincode)) {
+      setError("Enter a valid 6-digit PIN code.");
+      return;
+    }
+    const deliveryAddress = form.address.trim();
     setSubmitting(true);
     try {
       const res = await fetch("/api/razorpay/create-order", {
@@ -146,7 +153,8 @@ export default function CheckoutPage() {
             name: form.name,
             email: form.email,
             phone: form.phone,
-            address: form.address,
+            address: deliveryAddress,
+            pincode,
             state: form.state,
           },
         }),
@@ -303,7 +311,25 @@ export default function CheckoutPage() {
                   className="bg-brand-c100 border-brand-c300/70 text-brand-ink placeholder:text-brand-ink-soft"
                   value={form.address}
                   onChange={(e) => setForm({ ...form, address: e.target.value })}
-                  placeholder="House, street, city, pincode"
+                  placeholder="House, street, city"
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-1.5">
+                <label htmlFor="pincode" className="text-xs font-medium text-brand-ink-mid">
+                  PIN code
+                </label>
+                <Input
+                  id="pincode"
+                  required
+                  inputMode="numeric"
+                  pattern="\d{6}"
+                  maxLength={6}
+                  className="bg-brand-c100 border-brand-c300/70 text-brand-ink placeholder:text-brand-ink-soft"
+                  value={form.pincode}
+                  onChange={(e) =>
+                    setForm({ ...form, pincode: e.target.value.replace(/\D/g, "") })
+                  }
+                  placeholder="600001"
                 />
               </div>
               <div className="grid grid-cols-1 gap-1.5">
@@ -331,7 +357,14 @@ export default function CheckoutPage() {
             </div>
             <Button
               type="submit"
-              disabled={submitting || !form.name || !form.email || !form.phone || !form.address}
+              disabled={
+                submitting ||
+                !form.name ||
+                !form.email ||
+                !form.phone ||
+                !form.address ||
+                form.pincode.length !== 6
+              }
               className="mt-8 h-11 w-full text-base"
             >
               {submitting ? (

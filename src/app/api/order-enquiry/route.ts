@@ -88,7 +88,9 @@ export async function POST(request: Request) {
     await getCatalog().createOrder({
       customerId: null,
       customerName: null,
+      customerEmail: null,
       customerPhone: null,
+      customerPincode: null,
       customerAddress: null,
       customerState: null,
       notes: parsed.data.note,

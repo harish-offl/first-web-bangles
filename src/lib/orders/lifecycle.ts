@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@/types";
+import type { OrderStatus, PaymentStatus } from "@/types";
 
 /**
  * Allowed status transitions for the Bangles by Beauty order lifecycle.
@@ -37,7 +37,7 @@ export { type OrderStatus };
 export const ORDER_STATUS_LABELS: Record<string, string> = {
   pending: "Order Placed",
   confirmed: "Order Confirmed",
-  processing: "Processing",
+  processing: "Packing",
   shipped: "Shipped",
   out_for_delivery: "Out for Delivery",
   delivered: "Delivered",
@@ -53,6 +53,18 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
   stock_unavailable: "Stock Unavailable",
   returned: "Returned",
 };
+
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  pending: "Pending",
+  authorized: "Authorized",
+  paid: "Paid",
+  failed: "Failed",
+  refund_initiated: "Refund Initiated",
+  refunded: "Refunded",
+  partially_refunded: "Partially Refunded",
+};
+
+export const PAYMENT_STATUSES = Object.keys(PAYMENT_STATUS_LABELS) as PaymentStatus[];
 
 export const DELIVERY_STAGE_LABELS: Record<string, string> = {
   order_confirmed: "Order Confirmed",
@@ -72,10 +84,45 @@ export const TRACKING_TIMELINE: OrderStatus[] = [
   "delivered",
 ];
 
+/** Fulfilment statuses shown in the admin status dropdown.
+ * Return/refund exception statuses are handled through separate actions. */
+export const FULFILMENT_STATUSES: OrderStatus[] = [
+  "pending",
+  "confirmed",
+  "processing",
+  "shipped",
+  "out_for_delivery",
+  "delivered",
+  "cancelled",
+  "stock_unavailable",
+];
+
+const STATUS_TO_DELIVERY_STAGE: Partial<Record<OrderStatus, string>> = {
+  confirmed: "order_confirmed",
+  processing: "packing",
+  shipped: "shipped",
+  out_for_delivery: "out_for_delivery",
+  delivered: "delivered",
+};
+
+export function statusToDeliveryStage(status: OrderStatus): string | null {
+  return STATUS_TO_DELIVERY_STAGE[status] ?? null;
+}
+
+export function paymentStatusLabel(status: string | null | undefined): string {
+  if (!status) return "Pending";
+  return PAYMENT_STATUS_LABELS[status as PaymentStatus] ?? status;
+}
+
+export function orderStatusLabel(status: string | null | undefined): string {
+  if (!status) return "—";
+  return ORDER_STATUS_LABELS[status] ?? status;
+}
+
 export const DEFAULT_STATUS_MESSAGES: Record<OrderStatus, string> = {
   pending: "We have received your order successfully.",
   confirmed: "Your order has been confirmed and the product availability is verified.",
-  processing: "We are carefully preparing your order.",
+  processing: "We are carefully packing your order.",
   shipped: "Your order has been dispatched and is on its way.",
   out_for_delivery: "Your order is out for delivery. Please keep your phone available.",
   delivered: "Your order has been successfully delivered. Thank you for shopping with Bangles by Beauty.",
@@ -118,4 +165,12 @@ export function assertValidTransition(previous: OrderStatus, next: OrderStatus):
  */
 export function timelineIndex(status: OrderStatus): number {
   return TRACKING_TIMELINE.indexOf(status);
+}
+
+export function isTimelineStatus(status: string): status is OrderStatus {
+  return TRACKING_TIMELINE.includes(status as OrderStatus);
+}
+
+export function isExceptionalStatus(status: string): boolean {
+  return !isTimelineStatus(status);
 }

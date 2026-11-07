@@ -11,29 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ORDER_STATUS_LABELS, allowedTransitions } from "@/lib/orders/lifecycle";
 import type { OrderStatus } from "@/types";
-
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: "Order Placed",
-  confirmed: "Order Confirmed",
-  processing: "Processing",
-  shipped: "Shipped",
-  out_for_delivery: "Out for Delivery",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
-  delivery_failed: "Delivery Failed",
-  return_requested: "Return Requested",
-  return_approved: "Return Approved",
-  return_rejected: "Return Rejected",
-  refund_initiated: "Refund Initiated",
-  refunded: "Refunded",
-  payment_pending: "Payment Pending",
-  payment_failed: "Payment Failed",
-  stock_unavailable: "Stock Unavailable",
-  returned: "Returned",
-};
-
-const STATUSES = Object.keys(STATUS_LABELS) as OrderStatus[];
 
 interface EnquiryStatusSelectProps {
   id: string;
@@ -42,6 +21,9 @@ interface EnquiryStatusSelectProps {
 
 export function EnquiryStatusSelect({ id, status }: EnquiryStatusSelectProps) {
   const [pending, startTransition] = useTransition();
+  const statuses = [status, ...allowedTransitions(status)].filter(
+    (value, index, list) => list.indexOf(value) === index,
+  );
 
   function handleChange(next: OrderStatus) {
     if (next === status) return;
@@ -63,9 +45,9 @@ export function EnquiryStatusSelect({ id, status }: EnquiryStatusSelectProps) {
         )}
       </SelectTrigger>
       <SelectContent>
-        {STATUSES.map((value) => (
+        {statuses.map((value) => (
           <SelectItem key={value} value={value}>
-            {STATUS_LABELS[value]}
+            {ORDER_STATUS_LABELS[value] ?? value}
           </SelectItem>
         ))}
       </SelectContent>
