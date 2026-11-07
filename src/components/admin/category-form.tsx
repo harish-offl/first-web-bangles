@@ -112,14 +112,6 @@ export function CategoryForm({ category, colourPalette = [] }: CategoryFormProps
   return (
     <form action={formAction} className="max-w-4xl space-y-8">
       {category ? <input type="hidden" name="id" value={category.id} /> : null}
-      {localFile && (
-        <input
-          type="hidden"
-          name="image_file"
-          value={""}
-          disabled
-        />
-      )}
       {/* Hidden input carrying selected product IDs to the server action */}
       <input
         type="hidden"

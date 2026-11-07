@@ -8,6 +8,7 @@ import {
   requireAdminAccess,
 } from "@/lib/admin/access";
 import { getCatalog } from "@/lib/data";
+import { normalizeImageSource } from "@/lib/images/url";
 import { isGlassBanglesCategory } from "@/lib/product-sizes";
 import { assertValidTransition } from "@/lib/orders/lifecycle";
 import { getServiceRoleClient, isServiceRoleConfigured } from "@/lib/supabase/service-role";
@@ -301,16 +302,29 @@ async function resolveImageUrl(
       const path = `uploads/${Date.now()}-${safeName}`;
       const { error } = await supabase.storage.from("product-images").upload(path, file, {
         contentType: file.type,
+        cacheControl: "31536000",
         upsert: false,
       });
       if (error) return { error: `Upload failed: ${error.message}` };
       const { data } = supabase.storage.from("product-images").getPublicUrl(path);
-      return { url: data.publicUrl };
+      const publicUrl = normalizeImageSource(data.publicUrl);
+      if (!publicUrl) return { error: "Upload succeeded but the image URL was invalid." };
+      return { url: publicUrl };
     } catch (error) {
       return { error: error instanceof Error ? error.message : "Upload failed." };
     }
   }
-  return { url: optionalString(formData.get("primary_image_url")) ?? fallback };
+  const pasted =
+    optionalString(formData.get("primary_image_url")) ??
+    optionalString(formData.get("image_url"));
+  if (pasted) {
+    const normalized = normalizeImageSource(pasted);
+    if (!normalized) {
+      return { error: "Enter a valid image URL or upload a file." };
+    }
+    return { url: normalized };
+  }
+  return { url: fallback ? normalizeImageSource(fallback) : null };
 }
 
 export async function saveProductAction(
@@ -428,11 +442,20 @@ export async function saveCategoryAction(
     await requireAdminAccess();
     id = optionalString(formData.get("id"));
 
+    const catalog = getCatalog();
+    const existingCategory = id
+      ? (await catalog.listCategories()).find((category) => category.id === id) ?? null
+      : null;
+    const image = await resolveImageUrl(formData, existingCategory?.image_url ?? null);
+    if ("error" in image) {
+      return { status: "error", message: image.error, fieldErrors: { image_url: image.error } };
+    }
+
     const raw = {
       name: formData.get("name"),
       slug: formData.get("slug"),
       description: optionalString(formData.get("description")),
-      image_url: optionalString(formData.get("image_url")),
+      image_url: image.url,
       sort_order: formData.get("sort_order") ?? 0,
       is_active: formData.get("is_active") === "on",
     };
@@ -446,7 +469,6 @@ export async function saveCategoryAction(
       };
     }
 
-    const catalog = getCatalog();
     let savedCategory: { id: string } | null = null;
     if (id) {
       await catalog.updateCategory(id, parsed.data);

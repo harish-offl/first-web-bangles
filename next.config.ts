@@ -64,9 +64,25 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    // Vercel's built-in optimizer returns 402 when the project's image
+    // optimisation allowance is exhausted. Use Supabase Storage's resize
+    // endpoint for remote photos and serve local assets directly instead.
+    loader: "custom",
+    loaderFile: "./src/lib/images/loader.js",
     // Next.js 16 requires explicit remote patterns instead of `domains`.
+    // Kept for documentation/any future non-custom loader and to make the
+    // accepted Supabase hosts explicit.
     remotePatterns: [
-      { protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/**" },
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/render/image/public/**",
+      },
       { protocol: "https", hostname: "res.cloudinary.com" },
     ],
     formats: ["image/avif", "image/webp"],
