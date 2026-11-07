@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getServiceRoleClient, isServiceRoleConfigured } from "@/lib/supabase/service-role";
+import { normaliseWhatsAppNumber } from "@/lib/whatsapp/shared";
 import {
   DEFAULT_STATUS_MESSAGES,
   ORDER_STATUS_LABELS,
@@ -65,12 +66,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Order not found." }, { status: 404 });
     }
 
-    const storedPhoneDigits = String(order.customer_phone ?? "").replace(/\D/g, "");
-    if (
-      storedPhoneDigits.length < 10 ||
-      storedPhoneDigits.slice(-10) !== contactDigits.slice(-10)
-    ) {
-      return NextResponse.json({ error: "Order not found." }, { status: 404 });
+    const storedPhone = normaliseWhatsAppNumber(order.customer_phone);
+    const contactPhone = normaliseWhatsAppNumber(contact);
+
+    if (!storedPhone || !contactPhone || storedPhone !== contactPhone) {
+      return NextResponse.json(
+        { error: "Phone number does not match the one used at checkout." },
+        { status: 404 },
+      );
     }
 
     const [{ data: items, error: itemsError }, { data: history, error: historyError }] =

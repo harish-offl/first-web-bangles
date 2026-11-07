@@ -125,8 +125,10 @@ export default function TrackOrderPage() {
         { headers: { "x-order-contact": contact } },
       );
       if (res.status === 404) {
+        const errorData = await res.json().catch(() => ({}));
         setError(
-          "Order not found. Please check your Order ID and the phone number used at checkout.",
+          errorData.error ||
+            "Order not found. Please check your Order ID and the phone number used at checkout.",
         );
         setLoading(false);
         return;
