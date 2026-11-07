@@ -67,6 +67,7 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
 export const PAYMENT_STATUSES = Object.keys(PAYMENT_STATUS_LABELS) as PaymentStatus[];
 
 export const DELIVERY_STAGE_LABELS: Record<string, string> = {
+  order_placed: "Order Placed",
   order_confirmed: "Order Confirmed",
   packing: "Packing",
   shipped: "Shipped",
@@ -98,6 +99,7 @@ export const FULFILMENT_STATUSES: OrderStatus[] = [
 ];
 
 const STATUS_TO_DELIVERY_STAGE: Partial<Record<OrderStatus, string>> = {
+  pending: "order_placed",
   confirmed: "order_confirmed",
   processing: "packing",
   shipped: "shipped",

@@ -31,6 +31,7 @@ import {
 import type { OrderStatus } from "@/types";
 
 const DELIVERY_STAGE_ORDER: string[] = [
+  "order_placed",
   "order_confirmed",
   "packing",
   "shipped",
