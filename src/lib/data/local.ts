@@ -294,7 +294,7 @@ export const localDriver: CatalogDriver = {
 
   async getProductBySlug(slug): Promise<Product | null> {
     const { categories, products, product_colours } = readCatalog();
-    const found = products.find((p) => p.slug === slug);
+    const found = products.find((p) => p.slug === slug && p.is_active);
     if (!found) return null;
     const hydrated = withPalette(found, categories, product_colours ?? []);
     return {

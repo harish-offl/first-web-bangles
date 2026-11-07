@@ -135,6 +135,7 @@ const getProductBySlugCached = unstable_cache(
       .from("products")
       .select(`${PRODUCT_SELECT}, images:product_images(*), variants:product_variants(*)`)
       .eq("slug", slug)
+      .eq("is_active", true)
       .maybeSingle();
     if (error) throw new Error(`Failed to load product: ${error.message}`);
     return attachPalette(hydrate(data as Record<string, unknown> | null));

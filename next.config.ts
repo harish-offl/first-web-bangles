@@ -74,6 +74,17 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 3600,
     dangerouslyAllowLocalIP: true,
   },
+  async redirects() {
+    return [
+      {
+        // The original multi-colour product was split into one product per
+        // colour. Send old links to the collection rather than a dead product.
+        source: "/products/raindrop-glass-bangles",
+        destination: "/collections/glass-bangles",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
