@@ -1703,9 +1703,305 @@ $$;
 revoke all on function public.decrement_order_stock(uuid) from public;
 grant execute on function public.decrement_order_stock(uuid) to service_role;
 
+-- 0023_split_glass_bangles_by_colour.sql
+-- Splits every multi-colour Glass Bangles product into one independent product
+-- per colour. The storefront, cart, orders and admin all treat each colour as a
+-- normal product after this migration.
+--
+-- Safety:
+--   * Fresh databases have no legacy product, so this is a no-op there.
+--   * Existing colour products are reused by slug, never duplicated.
+--   * Variant rows are moved (not recreated), preserving ids, stock, prices
+--     and SKUs so order history and inventory are not reset.
+--   * The legacy product is deactivated only after every colour product exists
+--     and its variants have been moved. It is never deleted.
+--   * Missing variant sizes are created with NULL stock (untracked), so the
+--     migration never invents inventory counts.
+--
+-- Fixed product ids match supabase/seed.sql so a later seed/deploy run updates
+-- the same rows instead of creating duplicates.
+
+do $$
+declare
+  v_category_id uuid;
+  v_legacy record;
+  v_colour record;
+  v_product_id uuid;
+  v_existing_id uuid;
+  v_slug text;
+  v_name text;
+  v_sku text;
+  v_code text;
+  v_colour_slug text;
+  v_image_url text;
+  v_size text;
+  v_unmatched integer;
+  v_source record;
+  v_target record;
+  v_sizes text[] := array['2.2', '2.4', '2.6', '2.8', '2.10'];
+begin
+  select id into v_category_id
+  from public.categories
+  where slug = 'glass-bangles';
+
+  if v_category_id is null then
+    return;
+  end if;
+
+  for v_legacy in
+    select p.*
+    from public.products p
+    where p.category_id = v_category_id
+      and (
+        p.is_active
+        or exists (
+          select 1 from public.product_variants existing
+          where existing.product_id = p.id
+        )
+      )
+      and (
+        select count(distinct canonical)
+        from (
+          select case
+                   when lower(btrim(c)) = 'pista' then 'Pista Green'
+                   else btrim(c)
+                 end as canonical
+          from unnest(coalesce(p.colours, '{}'::text[])) as c
+          where btrim(c) <> ''
+          union
+          select case
+                   when lower(btrim(v.colour)) = 'pista' then 'Pista Green'
+                   else btrim(v.colour)
+                 end
+          from public.product_variants v
+          where v.product_id = p.id
+            and btrim(coalesce(v.colour, '')) <> ''
+        ) source_colours
+      ) > 1
+  loop
+    -- Every source colour must exist in the palette; otherwise moving variants
+    -- could silently drop a colourway.
+    select count(*)
+      into v_unmatched
+      from (
+        select distinct canonical
+        from (
+          select case
+                   when lower(btrim(c)) = 'pista' then 'Pista Green'
+                   else btrim(c)
+                 end as canonical
+          from unnest(coalesce(v_legacy.colours, '{}'::text[])) as c
+          where btrim(c) <> ''
+          union
+          select case
+                   when lower(btrim(v.colour)) = 'pista' then 'Pista Green'
+                   else btrim(v.colour)
+                 end as canonical
+          from public.product_variants v
+          where v.product_id = v_legacy.id
+            and btrim(coalesce(v.colour, '')) <> ''
+        ) source_colours
+      ) source_colours
+      left join public.product_colours pc
+        on pc.category_id = v_category_id
+       and lower(btrim(pc.name)) = lower(source_colours.canonical)
+      where pc.id is null;
+
+    if v_unmatched > 0 then
+      raise exception
+        'Glass Bangles palette is missing % colour(s) for product %; split aborted.',
+        v_unmatched,
+        v_legacy.id;
+    end if;
+
+    for v_colour in
+      select pc.*
+      from public.product_colours pc
+      join (
+        select distinct canonical
+        from (
+          select case
+                   when lower(btrim(c)) = 'pista' then 'Pista Green'
+                   else btrim(c)
+                 end as canonical
+          from unnest(coalesce(v_legacy.colours, '{}'::text[])) as c
+          where btrim(c) <> ''
+          union
+          select case
+                   when lower(btrim(v.colour)) = 'pista' then 'Pista Green'
+                   else btrim(v.colour)
+                 end as canonical
+          from public.product_variants v
+          where v.product_id = v_legacy.id
+            and btrim(coalesce(v.colour, '')) <> ''
+        ) source_colours
+      ) source_colours
+        on lower(btrim(pc.name)) = lower(source_colours.canonical)
+      where pc.category_id = v_category_id
+      order by pc.sort_order, pc.name
+    loop
+      v_colour_slug := lower(regexp_replace(v_colour.name, '[^a-zA-Z0-9]+', '-', 'g'));
+      v_colour_slug := regexp_replace(v_colour_slug, '^-+|-+$', '', 'g');
+      v_slug := v_legacy.slug || '-' || v_colour_slug;
+      v_name := v_legacy.name || ' ' || chr(8211) || ' ' || v_colour.name;
+      v_image_url := '/images/products/colors/bng-159-' || v_colour_slug || '.jpg';
+
+      v_code := case lower(v_colour.name)
+        when 'forest green' then 'FG'
+        when 'pista green' then 'PG'
+        when 'pink' then 'PK'
+        when 'maroon' then 'MR'
+        when 'red' then 'RD'
+        when 'rust orange' then 'RO'
+        when 'orange' then 'OR'
+        else upper(substr(regexp_replace(v_colour.name, '[^a-zA-Z0-9]+', '', 'g'), 1, 2))
+      end;
+      v_sku := case
+        when v_legacy.sku is null or btrim(v_legacy.sku) = '' then null
+        else v_legacy.sku || '-' || v_code
+      end;
+
+      v_product_id := case lower(v_colour.name)
+        when 'forest green' then '99140881-21c3-4a97-a2f5-c3e85fad570c'::uuid
+        when 'pista green' then '7b8f2fd4-fa6f-4001-89e5-ea69a6d1754c'::uuid
+        when 'pink' then '61db78e0-8c3d-420c-b513-6881befdc385'::uuid
+        when 'maroon' then 'daf0ea29-2994-4859-b5a4-6df12341709d'::uuid
+        when 'red' then 'be3774d5-fcde-4c1f-8f9b-9d05f63e42da'::uuid
+        when 'rust orange' then 'f1a03599-48cf-4361-8f5f-11cb45cb2aa2'::uuid
+        when 'orange' then 'f1c714bc-1b4d-49c6-9235-349de2dfd1fe'::uuid
+        else gen_random_uuid()
+      end;
+
+      select id into v_existing_id
+      from public.products
+      where slug = v_slug
+      limit 1;
+
+      if v_existing_id is not null then
+        v_product_id := v_existing_id;
+
+        update public.products
+           set category_id = v_category_id,
+               colours = array[v_colour.name],
+               colour_images = jsonb_build_array(
+                 jsonb_build_object('colour', v_colour.name, 'image_url', v_image_url)
+               ),
+               primary_image_url = coalesce(nullif(primary_image_url, ''), v_image_url),
+               is_active = true,
+               updated_at = timezone('utc', now())
+         where id = v_product_id;
+      else
+        insert into public.products (
+          id, category_id, name, slug, description, sku, price, compare_at_price,
+          stock_quantity, primary_image_url, colours, colour_images, is_active,
+          is_featured, is_new_arrival, seo_title, seo_description, legacy_id,
+          legacy_image_source, sort_index
+        ) values (
+          v_product_id, v_category_id, v_name, v_slug, coalesce(v_legacy.description, ''),
+          v_sku, coalesce(v_legacy.price, 0), v_legacy.compare_at_price, null,
+          v_image_url, array[v_colour.name],
+          jsonb_build_array(
+            jsonb_build_object('colour', v_colour.name, 'image_url', v_image_url)
+          ),
+          true, coalesce(v_legacy.is_featured, false),
+          coalesce(v_legacy.is_new_arrival, false), v_legacy.seo_title,
+          v_legacy.seo_description, v_legacy.legacy_id,
+          v_legacy.legacy_image_source,
+          coalesce(v_legacy.sort_index, 0) + coalesce(v_colour.sort_order, 0)
+        );
+      end if;
+
+      insert into public.category_products (category_id, product_id, sort_order)
+      values (
+        v_category_id,
+        v_product_id,
+        coalesce(v_legacy.sort_index, 0) + coalesce(v_colour.sort_order, 0)
+      )
+      on conflict (category_id, product_id) do update
+        set sort_order = excluded.sort_order,
+            updated_at = timezone('utc', now());
+
+      update public.product_colours
+         set image_url = v_image_url,
+             updated_at = timezone('utc', now())
+       where id = v_colour.id
+         and image_url is distinct from v_image_url;
+
+      for v_source in
+        select v.*
+        from public.product_variants v
+        where v.product_id = v_legacy.id
+          and case
+                when lower(btrim(v.colour)) = 'pista' then 'Pista Green'
+                else btrim(v.colour)
+              end = v_colour.name
+      loop
+        v_size := coalesce(nullif(btrim(v_source.size), ''), v_source.variant_value);
+
+        select * into v_target
+        from public.product_variants
+        where product_id = v_product_id
+          and coalesce(lower(size), lower(variant_value)) = lower(v_size)
+        limit 1;
+
+        if v_target.id is not null then
+          update public.product_variants
+             set stock_quantity = coalesce(stock_quantity, v_source.stock_quantity),
+                 price_override = coalesce(price_override, v_source.price_override),
+                 sku = coalesce(sku, v_source.sku),
+                 updated_at = timezone('utc', now())
+           where id = v_target.id;
+
+          update public.product_variants
+             set is_active = false,
+                 updated_at = timezone('utc', now())
+           where id = v_source.id;
+        else
+          update public.product_variants
+             set product_id = v_product_id,
+                 colour = v_colour.name,
+                 colour_hex = coalesce(v_colour.hex_code, colour_hex),
+                 size = v_size,
+                 image_url = v_image_url,
+                 is_active = true,
+                 updated_at = timezone('utc', now())
+           where id = v_source.id;
+        end if;
+      end loop;
+
+      foreach v_size in array v_sizes
+      loop
+        if not exists (
+          select 1
+          from public.product_variants
+          where product_id = v_product_id
+            and coalesce(lower(size), lower(variant_value)) = lower(v_size)
+        ) then
+          insert into public.product_variants (
+            product_id, variant_name, variant_value, size, colour, colour_hex,
+            image_url, sku, price_override, stock_quantity, is_active
+          ) values (
+            v_product_id, 'Size', v_size, v_size, v_colour.name, v_colour.hex_code,
+            v_image_url, null, null, null, true
+          );
+        end if;
+      end loop;
+    end loop;
+
+    update public.products
+       set is_active = false,
+           updated_at = timezone('utc', now())
+     where id = v_legacy.id;
+
+    delete from public.category_products
+     where category_id = v_category_id
+       and product_id = v_legacy.id;
+  end loop;
+end $$;
+
 -- seed.sql
 -- Generated by scripts/generate-seed.mjs — do not edit by hand.
--- Source: src/lib/data/catalog.json (162 products, 10 categories).
+-- Source: src/lib/data/catalog.json (169 products, 10 categories).
 -- Idempotent: every statement upserts on the primary key.
 
 begin;
@@ -1897,7 +2193,7 @@ insert into public.products (id, category_id, name, slug, description, sku, pric
   ('14108d14-31bd-5a94-b6c9-c94957b6199c', '5336f3f5-70c1-5116-b1f9-6cf6eb2a5241', 'Hanging lotus Centre clip Dark pink', 'hanging-lotus-centre-clip-dark-pink', 'Dark pink centre clip with a hanging lotus charm that sways gently with your hairstyle. The dark pink finish gives the centre clip a traditional look for festive occasions and weddings.', 'BNG-136', 110, null, null, 'https://ofcemustbpzfzmpohivp.supabase.co/storage/v1/object/public/product-images/products/hanging-lotus-centre-clip-dark-pink-BNG-136.jpg', array['dark pink'], '[]'::jsonb, true, false, false, null, null, '136', '/uploads/de2e3416-cea6-4d84-aab8-9acf9b9b75b9.jpg', 149),
   ('522d7814-4d29-556d-a298-073c9507b01e', '5336f3f5-70c1-5116-b1f9-6cf6eb2a5241', 'Round crystal Centre clip-Baby pink', 'round-crystal-centre-clip-baby-pink', 'Round centre clip clustered with baby pink crystals, adding soft sparkle to bun and braid styles. It brings baby pink tones to braids and buns for family gatherings and festive occasions.', 'BNG-135', 110, null, null, 'https://ofcemustbpzfzmpohivp.supabase.co/storage/v1/object/public/product-images/products/round-crystal-centre-clip-baby-pink-BNG-135.jpg', array['baby pink'], '[]'::jsonb, true, false, false, null, null, '135', '/uploads/ebe6f895-0f6c-440d-a14c-429745466795.jpg', 150),
   ('c3e72c85-eb1c-5710-8b81-edc0961f6ccb', '5336f3f5-70c1-5116-b1f9-6cf6eb2a5241', 'Oval Crystal center clip -parrot green', 'oval-crystal-center-clip-parrot-green', 'Oval centre clip set with parrot green crystals for a fresh pop of colour in traditional hairstyles. It brings parrot green tones to braids and buns for festivals and family gatherings.', 'BNG-134', 110, null, null, 'https://ofcemustbpzfzmpohivp.supabase.co/storage/v1/object/public/product-images/products/oval-crystal-center-clip-parrot-green-BNG-134.jpg', array['parrot green'], '[]'::jsonb, true, false, false, null, null, '134', '/uploads/fe5e6fe1-f138-4ba9-a4bd-ae89ead5e5cc.jpg', 151),
-  ('ec3ce521-740c-5e32-819e-b893ebbbdf17', '21c45a58-1868-5636-a6ca-f233f61f95b8', 'Raindrop Glass bangles', 'raindrop-glass-bangles', 'Raindrop glass bangles available in eight colourways — forest green, pista, pink, maroon, red, rust orange and more — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.', 'BNG-159', 280, null, null, 'https://ofcemustbpzfzmpohivp.supabase.co/storage/v1/object/public/product-images/products/raindrop-glass-bangles-BNG-159.jpg', array['Forest Green', 'Pista Green', 'Pink', 'Maroon', 'Red', 'Rust Orange', 'Orange', 'Pista'], '[{"colour":"Forest Green","image_url":"/images/products/colors/bng-159-forest-green.jpg"},{"colour":"Pista Green","image_url":"/images/products/colors/bng-159-pista-green.jpg"},{"colour":"Pink","image_url":"/images/products/colors/bng-159-pink.jpg"},{"colour":"Maroon","image_url":"/images/products/colors/bng-159-maroon.jpg"},{"colour":"Red","image_url":"/images/products/colors/bng-159-red.jpg"},{"colour":"Rust Orange","image_url":"/images/products/colors/bng-159-rust-orange.jpg"},{"colour":"Orange","image_url":"/images/products/colors/bng-159-rust-orange.jpg"},{"colour":"Pista","image_url":"/images/products/colors/bng-159-pista-green.jpg"}]'::jsonb, true, true, false, null, null, '159', 'https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg', 152),
+  ('ec3ce521-740c-5e32-819e-b893ebbbdf17', '21c45a58-1868-5636-a6ca-f233f61f95b8', 'Raindrop Glass bangles', 'raindrop-glass-bangles', 'Raindrop glass bangles available in eight colourways — forest green, pista, pink, maroon, red, rust orange and more — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.', 'BNG-159', 280, null, null, 'https://ofcemustbpzfzmpohivp.supabase.co/storage/v1/object/public/product-images/products/raindrop-glass-bangles-BNG-159.jpg', array['Forest Green', 'Pista Green', 'Pink', 'Maroon', 'Red', 'Rust Orange', 'Orange'], '[{"colour":"Forest Green","image_url":"/images/products/colors/bng-159-forest-green.jpg"},{"colour":"Pista Green","image_url":"/images/products/colors/bng-159-pista-green.jpg"},{"colour":"Pink","image_url":"/images/products/colors/bng-159-pink.jpg"},{"colour":"Maroon","image_url":"/images/products/colors/bng-159-maroon.jpg"},{"colour":"Red","image_url":"/images/products/colors/bng-159-red.jpg"},{"colour":"Rust Orange","image_url":"/images/products/colors/bng-159-rust-orange.jpg"},{"colour":"Orange","image_url":"/images/products/colors/bng-159-orange.jpg"}]'::jsonb, false, true, false, null, null, '159', 'https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg', 152),
   ('ad8d85f4-b013-533e-a3f5-e8cf066120b4', '47f069e4-bb01-579f-b16c-701f9f150b40', 'Laksmi with coin hair hook', 'laksmi-with-coin-hair-hook', 'Lakshmi with coin hair hook, available in packs of 5 (₹200), 10 (₹400) and 15 (₹600) — a handcrafted finishing piece for jada styling. The piece works for weddings, festivals and other traditional celebrations.', 'BNG-151', 200, null, null, 'https://ofcemustbpzfzmpohivp.supabase.co/storage/v1/object/public/product-images/products/laksmi-with-coin-hair-hook-BNG-151.jpg', '{}'::text[], '[]'::jsonb, true, false, false, null, null, '151', '/uploads/4b7b905d-be16-476d-bd0f-d11a8d599092.jpg', 153),
   ('4d21febc-73b1-5486-bca6-5992ffa5721d', '47f069e4-bb01-579f-b16c-701f9f150b40', 'Lotus with coin pearl chain Jada pillai', 'lotus-with-coin-pearl-chain-jada-pillai', 'Jada pillai chain with lotus and coin detailing on a graceful pearl strand — a traditional finishing piece for long braids. It completes a traditional jada braid for festivals, classical dance performances and weddings.', 'BNG-139', 150, null, null, 'https://ofcemustbpzfzmpohivp.supabase.co/storage/v1/object/public/product-images/products/lotus-with-coin-pearl-chain-jada-pillai-BNG-139.jpg', '{}'::text[], '[]'::jsonb, true, false, false, null, null, '139', '/uploads/24fe46bf-e575-4247-8cbe-c1a9a36e8537.jpg', 154),
   ('2d5695be-a7eb-55ce-98a1-6d0237432fbe', '0ab6ca75-2da5-5da9-899d-4a6b3b66c4c5', 'Jasmine hair accessories (Combo)', 'jasmine-hair-accessories-combo', 'Jasmine hair accessories combo — floral clips and strands that complete a traditional jada hairstyle in one set. It pairs easily with silk sarees and lehengas at weddings and festivals.', 'BNG-150', 250, null, null, 'https://ofcemustbpzfzmpohivp.supabase.co/storage/v1/object/public/product-images/products/jasmine-hair-accessories-combo-BNG-150.jpg', '{}'::text[], '[]'::jsonb, true, false, false, null, null, '150', '/uploads/3bbc2a35-4e23-4ea6-b440-ee54bf69b7ad.jpeg', 155),
@@ -1906,7 +2202,14 @@ insert into public.products (id, category_id, name, slug, description, sku, pric
   ('0d2dc01f-eb04-558f-807d-630e38ca6ec8', '1a722b74-b367-5b3d-b7a6-fd269079cdac', 'LOTUS (Mini) (YEMON YELLOW WITH GREEN)', 'lotus-mini-yemon-yellow-with-green', 'Mini lotus hair band in lemon yellow with green — a sunny, cheerful take on the mini lotus design. The green and yellow palette works with both simple and elaborate hairstyles for weddings, festivals and family gatherings.', 'BNG-131', 50, null, null, 'https://ofcemustbpzfzmpohivp.supabase.co/storage/v1/object/public/product-images/products/lotus-mini-yemon-yellow-with-green-BNG-131.jpg', array['green', 'yellow'], '[]'::jsonb, true, false, false, null, null, '131', '/uploads/173cfe38-7a02-4aac-a469-ddcc3de78b92.jpg', 158),
   ('fe9a27fa-8a01-5aff-8a97-1db26fc97478', '1a722b74-b367-5b3d-b7a6-fd269079cdac', 'MARYGOLD (RED WITH GREEN)', 'marygold-red-with-green', 'Marigold hair band in red with green, set with kundan stones for a traditional festive look. The green and red palette keeps the look traditional for family gatherings, weddings and other celebrations.', 'BNG-130', 75, null, null, 'https://ofcemustbpzfzmpohivp.supabase.co/storage/v1/object/public/product-images/products/marygold-red-with-green-BNG-130.jpg', array['green', 'red'], '[]'::jsonb, true, false, false, null, null, '130', '/uploads/9f9aee01-5886-47c9-81fc-d7247216962b.jpg', 159),
   ('e10a0d79-9ba5-51df-9fd6-88c1f298be9b', '1a722b74-b367-5b3d-b7a6-fd269079cdac', 'MARYGOLD (ORANGE WITH WHITE)', 'marygold-orange-with-white', 'Marigold hair band in orange with white, with bright bloom tones in a traditional design. The orange and white finish gives the hair band a traditional look for festive occasions and weddings.', 'BNG-129', 75, null, null, 'https://ofcemustbpzfzmpohivp.supabase.co/storage/v1/object/public/product-images/products/marygold-orange-with-white-BNG-129.jpg', array['orange', 'white'], '[]'::jsonb, true, false, false, null, null, '129', '/uploads/adea74c1-cc51-4afa-b87d-3c522ad47f2f.jpg', 160),
-  ('11d8c3f2-4b52-5d4f-9665-2b738314b7de', '1a722b74-b367-5b3d-b7a6-fd269079cdac', 'MARYGOLD (RED WITH MIRROR WHITE)', 'marygold-red-with-mirror-white', 'Marigold hair band in red with mirror-white kundan that catches the light beautifully. The mirror white and red finish gives the hair band a traditional look for weddings and festivals.', 'BNG-128', 75, null, null, 'https://ofcemustbpzfzmpohivp.supabase.co/storage/v1/object/public/product-images/products/marygold-red-with-mirror-white-BNG-128.jpg', array['mirror white', 'red'], '[]'::jsonb, true, false, false, null, null, '128', '/uploads/0c861f31-25d4-4e19-ae8b-c1759a2bc05b.jpg', 161)
+  ('11d8c3f2-4b52-5d4f-9665-2b738314b7de', '1a722b74-b367-5b3d-b7a6-fd269079cdac', 'MARYGOLD (RED WITH MIRROR WHITE)', 'marygold-red-with-mirror-white', 'Marigold hair band in red with mirror-white kundan that catches the light beautifully. The mirror white and red finish gives the hair band a traditional look for weddings and festivals.', 'BNG-128', 75, null, null, 'https://ofcemustbpzfzmpohivp.supabase.co/storage/v1/object/public/product-images/products/marygold-red-with-mirror-white-BNG-128.jpg', array['mirror white', 'red'], '[]'::jsonb, true, false, false, null, null, '128', '/uploads/0c861f31-25d4-4e19-ae8b-c1759a2bc05b.jpg', 161),
+  ('99140881-21c3-4a97-a2f5-c3e85fad570c', '21c45a58-1868-5636-a6ca-f233f61f95b8', 'Raindrop Glass bangles – Forest Green', 'raindrop-glass-bangles-forest-green', 'Raindrop glass bangles available in seven colourways — forest green, pista green, pink, maroon, red, rust orange and orange — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.', 'BNG-159-FG', 280, null, null, '/images/products/colors/bng-159-forest-green.jpg', array['Forest Green'], '[{"colour":"Forest Green","image_url":"/images/products/colors/bng-159-forest-green.jpg"}]'::jsonb, true, true, false, null, null, '159', 'https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg', 152),
+  ('7b8f2fd4-fa6f-4001-89e5-ea69a6d1754c', '21c45a58-1868-5636-a6ca-f233f61f95b8', 'Raindrop Glass bangles – Pista Green', 'raindrop-glass-bangles-pista-green', 'Raindrop glass bangles available in seven colourways — forest green, pista green, pink, maroon, red, rust orange and orange — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.', 'BNG-159-PG', 280, null, null, '/images/products/colors/bng-159-pista-green.jpg', array['Pista Green'], '[{"colour":"Pista Green","image_url":"/images/products/colors/bng-159-pista-green.jpg"}]'::jsonb, true, true, false, null, null, '159', 'https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg', 153),
+  ('61db78e0-8c3d-420c-b513-6881befdc385', '21c45a58-1868-5636-a6ca-f233f61f95b8', 'Raindrop Glass bangles – Pink', 'raindrop-glass-bangles-pink', 'Raindrop glass bangles available in seven colourways — forest green, pista green, pink, maroon, red, rust orange and orange — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.', 'BNG-159-PK', 280, null, null, '/images/products/colors/bng-159-pink.jpg', array['Pink'], '[{"colour":"Pink","image_url":"/images/products/colors/bng-159-pink.jpg"}]'::jsonb, true, true, false, null, null, '159', 'https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg', 154),
+  ('daf0ea29-2994-4859-b5a4-6df12341709d', '21c45a58-1868-5636-a6ca-f233f61f95b8', 'Raindrop Glass bangles – Maroon', 'raindrop-glass-bangles-maroon', 'Raindrop glass bangles available in seven colourways — forest green, pista green, pink, maroon, red, rust orange and orange — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.', 'BNG-159-MR', 280, null, null, '/images/products/colors/bng-159-maroon.jpg', array['Maroon'], '[{"colour":"Maroon","image_url":"/images/products/colors/bng-159-maroon.jpg"}]'::jsonb, true, true, false, null, null, '159', 'https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg', 155),
+  ('be3774d5-fcde-4c1f-8f9b-9d05f63e42da', '21c45a58-1868-5636-a6ca-f233f61f95b8', 'Raindrop Glass bangles – Red', 'raindrop-glass-bangles-red', 'Raindrop glass bangles available in seven colourways — forest green, pista green, pink, maroon, red, rust orange and orange — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.', 'BNG-159-RD', 280, null, null, '/images/products/colors/bng-159-red.jpg', array['Red'], '[{"colour":"Red","image_url":"/images/products/colors/bng-159-red.jpg"}]'::jsonb, true, true, false, null, null, '159', 'https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg', 156),
+  ('f1a03599-48cf-4361-8f5f-11cb45cb2aa2', '21c45a58-1868-5636-a6ca-f233f61f95b8', 'Raindrop Glass bangles – Rust Orange', 'raindrop-glass-bangles-rust-orange', 'Raindrop glass bangles available in seven colourways — forest green, pista green, pink, maroon, red, rust orange and orange — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.', 'BNG-159-RO', 280, null, null, '/images/products/colors/bng-159-rust-orange.jpg', array['Rust Orange'], '[{"colour":"Rust Orange","image_url":"/images/products/colors/bng-159-rust-orange.jpg"}]'::jsonb, true, true, false, null, null, '159', 'https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg', 157),
+  ('f1c714bc-1b4d-49c6-9235-349de2dfd1fe', '21c45a58-1868-5636-a6ca-f233f61f95b8', 'Raindrop Glass bangles – Orange', 'raindrop-glass-bangles-orange', 'Raindrop glass bangles available in seven colourways — forest green, pista green, pink, maroon, red, rust orange and orange — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.', 'BNG-159-OR', 280, null, null, '/images/products/colors/bng-159-orange.jpg', array['Orange'], '[{"colour":"Orange","image_url":"/images/products/colors/bng-159-orange.jpg"}]'::jsonb, true, true, false, null, null, '159', 'https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg', 158)
 on conflict (id) do update set category_id = excluded.category_id, name = excluded.name, slug = excluded.slug, description = excluded.description, sku = excluded.sku, price = excluded.price, compare_at_price = excluded.compare_at_price, stock_quantity = excluded.stock_quantity, primary_image_url = excluded.primary_image_url, colours = excluded.colours, colour_images = excluded.colour_images, is_active = excluded.is_active, is_featured = excluded.is_featured, is_new_arrival = excluded.is_new_arrival, seo_title = excluded.seo_title, seo_description = excluded.seo_description, legacy_id = excluded.legacy_id, legacy_image_source = excluded.legacy_image_source, sort_index = excluded.sort_index, updated_at = timezone('utc', now());
 
 commit;

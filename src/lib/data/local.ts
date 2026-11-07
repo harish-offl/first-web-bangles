@@ -214,6 +214,16 @@ function matches(p: Product, f: ProductFilters, categorySlugById: Map<string, st
     if (!wanted.some((w) => have.includes(w))) return false;
   }
 
+  if (f.size) {
+    const size = f.size.trim().toLowerCase();
+    const hasSize = (p.variants ?? []).some(
+      (variant) =>
+        variant.is_active !== false &&
+        String(variant.size ?? variant.variant_value).trim().toLowerCase() === size,
+    );
+    if (!hasSize) return false;
+  }
+
   if (f.inStock && p.stock_quantity !== null && p.stock_quantity <= 0) return false;
 
   return true;

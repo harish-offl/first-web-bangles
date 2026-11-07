@@ -21,8 +21,8 @@ interface ProductDetailProps {
  * Client shell for the product page buy area.
  *
  * Colour selection is shared between the gallery and the purchase panel so
- * that picking a colour (or a colour thumbnail) swaps the main image, which is
- * how the glass bangles present their eight colourways.
+ * that picking a colour (or a colour thumbnail) swaps the main image. Split
+ * Glass Bangles products have a single colour, so the selector stays hidden.
  */
 export function ProductDetail({
   product,
@@ -129,9 +129,11 @@ export function ProductDetail({
             <dt className="text-muted-foreground">Category</dt>
             <dd className="text-foreground">{product.category_name ?? "—"}</dd>
           </div>
-          {isGlassBanglesCategory(product.category_name) && product.colours.length > 1 ? (
+          {isGlassBanglesCategory(product.category_name) && product.colours.length > 0 ? (
             <div className="flex gap-2 sm:col-span-2">
-              <dt className="text-muted-foreground">Colours</dt>
+              <dt className="text-muted-foreground">
+                {product.colours.length > 1 ? "Colours" : "Colour"}
+              </dt>
               <dd className="capitalize text-foreground">{product.colours.join(", ")}</dd>
             </div>
           ) : null}

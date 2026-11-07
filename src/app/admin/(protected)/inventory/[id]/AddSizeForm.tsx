@@ -22,16 +22,19 @@ interface RowState {
 export default function AddSizeForm({
   productId,
   palette = [],
+  productColour = null,
 }: {
   productId: string;
   palette?: ProductColour[];
+  productColour?: string | null;
 }) {
+  const fixedColour = productColour?.trim() || null;
   const [state, formAction, pending] = useActionState(
     addProductVariantsAction,
     initialState,
   );
   const [rows, setRows] = useState<RowState[]>([
-    { id: 1, colour: palette[0]?.name ?? "" },
+    { id: 1, colour: fixedColour ?? palette[0]?.name ?? "" },
   ]);
   const nextRowId = useRef(2);
   const formRef = useRef<HTMLFormElement>(null);
@@ -46,7 +49,7 @@ export default function AddSizeForm({
   function addRow() {
     setRows((prev) => [
       ...prev,
-      { id: nextRowId.current, colour: palette[0]?.name ?? "" },
+      { id: nextRowId.current, colour: fixedColour ?? palette[0]?.name ?? "" },
     ]);
     nextRowId.current += 1;
   }
@@ -73,9 +76,11 @@ export default function AddSizeForm({
       <p className="mt-1 text-sm text-muted-foreground">
         Add one or more bangle sizes with their opening stock. Sizes are stored
         as text, so 2.10 stays 2.10.
-        {palette.length > 0
-          ? " Choose the colour each size belongs to."
-          : null}
+        {fixedColour
+          ? " This product is sold in one colour only."
+          : palette.length > 0
+            ? " Choose the colour each size belongs to."
+            : null}
       </p>
 
       <datalist id="bangle-size-options">
@@ -90,12 +95,42 @@ export default function AddSizeForm({
             key={row.id}
             className={cn(
               "grid gap-3 border-t border-border pt-3 first:border-0 first:pt-0 sm:grid-cols-2 lg:items-end",
-              palette.length > 0
+              fixedColour || palette.length > 0
                 ? "lg:grid-cols-[160px_1fr_140px_1fr_auto]"
                 : "lg:grid-cols-[1fr_140px_1fr_auto]",
             )}
           >
-            {palette.length > 0 ? (
+            {fixedColour ? (
+              <div className="space-y-1.5">
+                <Label className={index === 0 ? undefined : "sr-only"}>Colour</Label>
+                <p className="flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/40 px-2.5 text-sm text-foreground">
+                  <span
+                    aria-hidden="true"
+                    className="size-3 rounded-full border border-black/10"
+                    style={{
+                      backgroundColor:
+                        palette.find(
+                          (colour) =>
+                            colour.name.trim().toLowerCase() ===
+                            fixedColour.toLowerCase(),
+                        )?.hex_code ?? "#C9A227",
+                    }}
+                  />
+                  {fixedColour}
+                </p>
+                <input type="hidden" name="colour" value={fixedColour} />
+                <input
+                  type="hidden"
+                  name="colour_hex"
+                  value={
+                    palette.find(
+                      (colour) =>
+                        colour.name.trim().toLowerCase() === fixedColour.toLowerCase(),
+                    )?.hex_code ?? ""
+                  }
+                />
+              </div>
+            ) : palette.length > 0 ? (
               <div className="space-y-1.5">
                 <Label
                   htmlFor={`colour-${row.id}`}
@@ -130,7 +165,9 @@ export default function AddSizeForm({
             <div className="space-y-1.5">
               <Label
                 htmlFor={`size-${row.id}`}
-                className={index === 0 && palette.length === 0 ? undefined : "sr-only"}
+                className={
+                  index === 0 && !fixedColour && palette.length === 0 ? undefined : "sr-only"
+                }
               >
                 Size
               </Label>

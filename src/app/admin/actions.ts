@@ -8,6 +8,7 @@ import {
   requireAdminAccess,
 } from "@/lib/admin/access";
 import { getCatalog } from "@/lib/data";
+import { isGlassBanglesCategory } from "@/lib/product-sizes";
 import { assertValidTransition } from "@/lib/orders/lifecycle";
 import { getServiceRoleClient, isServiceRoleConfigured } from "@/lib/supabase/service-role";
 import {
@@ -357,6 +358,18 @@ export async function saveProductAction(
         message: "Please correct the highlighted fields.",
         fieldErrors: fieldErrorsFrom(parsed.error),
       };
+    }
+
+    if (parsed.data.category_id && parsed.data.colours.length !== 1) {
+      const categories = await getCatalog().listCategories();
+      const category = categories.find((item) => item.id === parsed.data.category_id);
+      if (category && isGlassBanglesCategory(category.name)) {
+        return {
+          status: "error",
+          message: "Glass Bangles products must have exactly one colour.",
+          fieldErrors: { colours: "Choose exactly one colour for this product." },
+        };
+      }
     }
 
     const variantsJson = formData.get("variants_json");
@@ -822,6 +835,12 @@ export async function addProductVariantsAction(
       return { status: "error", message: "Product not found." };
     }
 
+    const existing = await catalog.getProductVariants(productId);
+    const lockedColour =
+      product.colours?.[0]?.trim() ||
+      existing.find((variant) => variant.colour)?.colour?.trim() ||
+      null;
+
     const sizes = formData.getAll("size");
     const stocks = formData.getAll("stock");
     const skus = formData.getAll("sku");
@@ -844,7 +863,8 @@ export async function addProductVariantsAction(
 
     for (let index = 0; index < sizes.length; index += 1) {
       const size = String(sizes[index] ?? "").trim();
-      const colour = String(colours[index] ?? "").trim() || null;
+      const colour =
+        lockedColour ?? (String(colours[index] ?? "").trim() || null);
       if (!size) {
         fieldErrors[`size_${index}`] = "Size is required.";
         continue;
@@ -887,7 +907,6 @@ export async function addProductVariantsAction(
       };
     }
 
-    const existing = await catalog.getProductVariants(productId);
     const existingKeys = new Set(
       existing.map(
         (variant) =>

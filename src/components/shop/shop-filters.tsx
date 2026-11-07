@@ -14,6 +14,8 @@ interface ShopFiltersProps {
   pathname: string;
   categories: Category[];
   colours: string[];
+  sizes?: string[];
+  showCategories?: boolean;
   priceFloor: number;
   priceCeil: number;
   value: ShopFilterValue;
@@ -37,6 +39,8 @@ export function ShopFilters({
   pathname,
   categories,
   colours,
+  sizes = [],
+  showCategories = true,
   priceFloor,
   priceCeil,
   value,
@@ -76,6 +80,7 @@ export function ShopFilters({
     Boolean(value.q) ||
     Boolean(value.category) ||
     value.colours.length > 0 ||
+    Boolean(value.size) ||
     Boolean(value.minPrice) ||
     Boolean(value.maxPrice) ||
     value.inStock;
@@ -152,47 +157,49 @@ export function ShopFilters({
         </div>
 
         <div className="mt-4 grid gap-6 md:grid-cols-2 lg:grid-cols-1">
-          <fieldset>
-            <legend className="mb-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-              Collection
-            </legend>
-            <ul className="flex flex-wrap gap-2">
-              <li>
-                <button
-                  type="button"
-                  onClick={() => navigate({ category: "" })}
-                  aria-pressed={!value.category}
-                  className={cn(
-                    "rounded-full border px-3 py-1.5 text-sm transition-colors",
-                    !value.category
-                      ? "border-gold-strong bg-brand-c100 font-medium text-foreground"
-                      : "border-border bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground",
-                  )}
-                >
-                  All
-                </button>
-              </li>
-              {activeCategories.map((category) => (
-                <li key={category.id}>
+          {showCategories ? (
+            <fieldset>
+              <legend className="mb-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                Collection
+              </legend>
+              <ul className="flex flex-wrap gap-2">
+                <li>
                   <button
                     type="button"
-                    onClick={() =>
-                      navigate({ category: value.category === category.slug ? "" : category.slug })
-                    }
-                    aria-pressed={value.category === category.slug}
+                    onClick={() => navigate({ category: "" })}
+                    aria-pressed={!value.category}
                     className={cn(
                       "rounded-full border px-3 py-1.5 text-sm transition-colors",
-                      value.category === category.slug
+                      !value.category
                         ? "border-gold-strong bg-brand-c100 font-medium text-foreground"
                         : "border-border bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground",
                     )}
                   >
-                    {category.name}
+                    All
                   </button>
                 </li>
-              ))}
-            </ul>
-          </fieldset>
+                {activeCategories.map((category) => (
+                  <li key={category.id}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate({ category: value.category === category.slug ? "" : category.slug })
+                      }
+                      aria-pressed={value.category === category.slug}
+                      className={cn(
+                        "rounded-full border px-3 py-1.5 text-sm transition-colors",
+                        value.category === category.slug
+                          ? "border-gold-strong bg-brand-c100 font-medium text-foreground"
+                          : "border-border bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground",
+                      )}
+                    >
+                      {category.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </fieldset>
+          ) : null}
 
           {colours.length > 0 ? (
             <fieldset>
@@ -216,6 +223,36 @@ export function ShopFilters({
                         )}
                       >
                         {colour}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </fieldset>
+          ) : null}
+
+          {sizes.length > 0 ? (
+            <fieldset>
+              <legend className="mb-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                Size
+              </legend>
+              <ul className="flex flex-wrap gap-2">
+                {sizes.map((size) => {
+                  const selected = value.size === size;
+                  return (
+                    <li key={size}>
+                      <button
+                        type="button"
+                        onClick={() => navigate({ size: selected ? "" : size })}
+                        aria-pressed={selected}
+                        className={cn(
+                          "rounded-full border px-3 py-1.5 text-sm tabular-nums transition-colors",
+                          selected
+                            ? "border-gold-strong bg-brand-c100 font-medium text-foreground"
+                            : "border-border bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground",
+                        )}
+                      >
+                        {size}
                       </button>
                     </li>
                   );

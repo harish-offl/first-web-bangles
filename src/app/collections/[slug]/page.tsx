@@ -7,10 +7,11 @@ import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { EmptyState } from "@/components/shared/empty-state";
 import { JsonLd } from "@/components/shared/json-ld";
 import { ListingPagination } from "@/components/shop/listing-pagination";
-import { SortSelect } from "@/components/shop/sort-select";
+import { ShopFilters } from "@/components/shop/shop-filters";
 import { Button } from "@/components/ui/button";
 import { getCatalog } from "@/lib/data";
-import { parseSort } from "@/lib/data/query";
+import { buildShopParams, parseShopValue, shopValueToFilters } from "@/lib/shop/params";
+import { BANGLE_SIZES, isBangleCategory } from "@/lib/product-sizes";
 import { breadcrumbJsonLd, itemListJsonLd } from "@/lib/seo/jsonld";
 
 export const revalidate = 300;
@@ -34,20 +35,38 @@ export async function generateMetadata(
 export default async function CollectionPage(props: PageProps<"/collections/[slug]">) {
   const { slug } = await props.params;
   const searchParams = await props.searchParams;
-  const sort = parseSort(searchParams.sort);
+  const value = { ...parseShopValue(searchParams), category: "" };
   const page = Math.max(1, Number(searchParams.page) || 1);
 
   const catalog = getCatalog();
   const category = await catalog.getCategoryBySlug(slug);
   if (!category) notFound();
 
-  const result = await catalog.listProductsByCategory(category.id, {
-    sort,
-    page,
-    pageSize: 24,
-  });
+  const result = await catalog.listProductsByCategory(
+    category.id,
+    shopValueToFilters(value, page),
+  );
 
-  const baseParams = sort && sort !== "newest" ? `sort=${sort}` : "";
+  const [priceLow, priceHigh, colours] = await Promise.all([
+    catalog.listProductsByCategory(category.id, {
+      sort: "price-asc",
+      page: 1,
+      pageSize: 1,
+    }),
+    catalog.listProductsByCategory(category.id, {
+      sort: "price-desc",
+      page: 1,
+      pageSize: 1,
+    }),
+    catalog.getColours(),
+  ]);
+  const priceFloor = priceLow.items[0]?.price ?? 0;
+  const priceCeil = priceHigh.items[0]?.price ?? priceFloor;
+  const sizes = isBangleCategory(category.name)
+    ? BANGLE_SIZES.map((size) => size.label)
+    : [];
+
+  const baseParams = buildShopParams(value).toString();
   const breadcrumbs = [
     { label: "Home", href: "/" },
     { label: "Collections", href: "/collections" },
@@ -69,11 +88,18 @@ export default async function CollectionPage(props: PageProps<"/collections/[slu
         </p>
       </header>
 
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-y border-border py-3">
-        <p className="text-sm text-muted-foreground">
-          {result.total} item{result.total === 1 ? "" : "s"}
-        </p>
-        <SortSelect pathname={`/collections/${slug}`} baseParams={baseParams} value={sort ?? "newest"} />
+      <div className="mt-8">
+        <ShopFilters
+          pathname={`/collections/${slug}`}
+          categories={[]}
+          showCategories={false}
+          colours={colours}
+          sizes={sizes}
+          priceFloor={priceFloor}
+          priceCeil={priceCeil}
+          value={value}
+          total={result.total}
+        />
       </div>
 
       <div className="mt-8">

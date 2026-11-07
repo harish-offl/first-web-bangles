@@ -403,9 +403,48 @@ export const supabaseDriver: CatalogDriver = {
     const page = Math.max(filters.page ?? 1, 1);
 
     // Get product ids assigned to this category
-    const assignedIds = await this.getCategoryProductIds(categoryId);
+    let assignedIds = await this.getCategoryProductIds(categoryId);
     if (!assignedIds.length) {
       return { items: [], total: 0, page, pageSize, pageCount: 0 };
+    }
+
+    if (filters.size) {
+      const { data: sizeRows, error: sizeError } = await supabase
+        .from("product_variants")
+        .select("product_id")
+        .in("product_id", assignedIds)
+        .eq("is_active", true)
+        .eq("size", filters.size);
+      if (sizeError) {
+        return { items: [], total: 0, page, pageSize, pageCount: 0 };
+      }
+      const allowed = new Set((sizeRows ?? []).map((row) => row.product_id));
+      assignedIds = assignedIds.filter((id) => allowed.has(id));
+      if (!assignedIds.length) {
+        return { items: [], total: 0, page, pageSize, pageCount: 0 };
+      }
+    }
+
+    if (filters.inStock) {
+      const { data: stockRows } = await supabase
+        .from("product_variants")
+        .select("product_id, stock_quantity")
+        .in("product_id", assignedIds)
+        .eq("is_active", true);
+      const stockByProduct = new Map<string, (number | null)[]>();
+      for (const row of stockRows ?? []) {
+        const list = stockByProduct.get(row.product_id) ?? [];
+        list.push(row.stock_quantity);
+        stockByProduct.set(row.product_id, list);
+      }
+      assignedIds = assignedIds.filter((id) => {
+        const stock = stockByProduct.get(id);
+        if (!stock || stock.length === 0) return true;
+        return stock.some((quantity) => quantity === null || quantity > 0);
+      });
+      if (!assignedIds.length) {
+        return { items: [], total: 0, page, pageSize, pageCount: 0 };
+      }
     }
 
     const base = supabase
@@ -427,6 +466,7 @@ export const supabaseDriver: CatalogDriver = {
     if (typeof filters.minPrice === "number") q = q.gte("price", filters.minPrice);
     if (typeof filters.maxPrice === "number") q = q.lte("price", filters.maxPrice);
     if (filters.colour?.length) q = q.contains("colours", filters.colour);
+    if (filters.inStock) q = q.or("stock_quantity.is.null,stock_quantity.gt.0");
 
     const sortMap: Record<string, [string, "asc" | "desc"]> = {
       newest: ["created_at", "desc"],

@@ -36,6 +36,10 @@ export default async function ManageStockPage({
   const palette = product.category_id
     ? await getAdminProductColours(product.category_id)
     : [];
+  const productColour =
+    product.colours?.[0]?.trim() ||
+    variants.find((variant) => variant.colour)?.colour?.trim() ||
+    null;
 
   return (
     <>
@@ -95,7 +99,11 @@ export default async function ManageStockPage({
 
         <div className="space-y-6">
           <StockUpdateForm product={product} variants={variants} />
-          <AddSizeForm productId={product.id} palette={palette} />
+          <AddSizeForm
+            productId={product.id}
+            palette={palette}
+            productColour={productColour}
+          />
         </div>
       </div>
     </>

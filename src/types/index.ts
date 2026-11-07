@@ -145,6 +145,7 @@ export interface ProductFilters {
   q?: string;
   category?: string;
   colour?: string[];
+  size?: string;
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;

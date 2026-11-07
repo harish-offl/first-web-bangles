@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Check, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { BANGLE_SIZES } from "@/lib/product-sizes";
 import type { ColourImage, Product, ProductColour, ProductVariant } from "@/types";
 
@@ -40,25 +41,27 @@ function makeVariant(
 // Synthetic ids only identify rows inside the form; the server ignores ids that
 // are not already in the database and creates those rows.
 export function ColourVariantForm({ palette, product }: ColourVariantFormProps) {
+  const initialColour = useMemo(() => {
+    const fromProduct = product?.colours?.[0];
+    if (fromProduct) return fromProduct;
+    const fromVariant = product?.variants?.find((variant) => variant.colour)?.colour;
+    if (fromVariant) return fromVariant;
+    // Existing size-only rows must not be dropped when the admin form opens;
+    // default them to the first active palette colour instead of every colour.
+    if ((product?.variants ?? []).length > 0) {
+      return palette.find((colour) => colour.is_active)?.name ?? "";
+    }
+    return "";
+  }, [palette, product]);
+
+  const [selectedColour, setSelectedColour] = useState(initialColour);
   const [variants, setVariants] = useState<ProductVariant[]>(() =>
     (product?.variants ?? []).map((variant) => ({
       ...variant,
       size: variant.size ?? variant.variant_value,
+      colour: variant.colour ?? initialColour,
     })),
   );
-  const [selectedColours, setSelectedColours] = useState<string[]>(() => {
-    const names = new Set<string>();
-    for (const variant of product?.variants ?? []) {
-      if (variant.colour) names.add(variant.colour);
-    }
-    for (const colour of product?.colours ?? []) names.add(colour);
-    if (names.size === 0) {
-      for (const colour of palette) {
-        if (colour.is_active) names.add(colour.name);
-      }
-    }
-    return [...names];
-  });
   const [colourImages, setColourImages] = useState<ColourImage[]>(
     () => product?.colour_images ?? [],
   );
@@ -73,46 +76,60 @@ export function ColourVariantForm({ palette, product }: ColourVariantFormProps) 
     return paletteByName.get(name.trim().toLowerCase());
   }
 
-  function addColour(name: string) {
-    if (!name || selectedColours.some((c) => c.toLowerCase() === name.toLowerCase())) {
-      return;
+  const colourOptions = useMemo(() => {
+    const active = palette.filter((colour) => colour.is_active);
+    if (
+      selectedColour &&
+      !active.some(
+        (colour) => colour.name.trim().toLowerCase() === selectedColour.trim().toLowerCase(),
+      )
+    ) {
+      const existing = paletteByName.get(selectedColour.trim().toLowerCase());
+      if (existing) return [...active, existing];
     }
+    return active;
+  }, [palette, paletteByName, selectedColour]);
+
+  function selectColour(name: string) {
+    if (!name || name === selectedColour) return;
     const meta = colourMeta(name);
     const hex = meta?.hex_code ?? "#C9A227";
     const imageUrl = meta?.image_url ?? null;
-    setSelectedColours((prev) => [...prev, name]);
-    setVariants((prev) => [
-      ...prev,
-      ...BANGLE_SIZES.map((size) =>
-        makeVariant(name, hex, size.label, imageUrl),
-      ),
-    ]);
-    if (imageUrl) {
-      setColourImages((prev) => [
-        ...prev.filter((img) => img.colour.toLowerCase() !== name.toLowerCase()),
-        { colour: name, image_url: imageUrl },
-      ]);
-    }
+
+    setSelectedColour(name);
+    setVariants((prev) => {
+      if (prev.length === 0) {
+        return BANGLE_SIZES.map((size) => makeVariant(name, hex, size.label, imageUrl));
+      }
+      return prev.map((variant) => ({
+        ...variant,
+        colour: name,
+        colour_hex: hex,
+        image_url: imageUrl,
+      }));
+    });
+    setColourImages((prev) => {
+      const others = prev.filter(
+        (image) => image.colour.toLowerCase() !== name.toLowerCase(),
+      );
+      return imageUrl ? [...others, { colour: name, image_url: imageUrl }] : others;
+    });
   }
 
-  function removeColour(name: string) {
-    setSelectedColours((prev) => prev.filter((c) => c !== name));
-    setVariants((prev) => prev.filter((variant) => variant.colour !== name));
-    setColourImages((prev) => prev.filter((img) => img.colour !== name));
-  }
-
-  function addSize(colour: string) {
-    const hex = colourMeta(colour)?.hex_code ?? "#C9A227";
+  function addSize() {
+    if (!selectedColour) return;
+    const meta = colourMeta(selectedColour);
+    const hex = meta?.hex_code ?? "#C9A227";
     const used = new Set(
-      variants
-        .filter((variant) => variant.colour === colour)
-        .map((variant) => (variant.size ?? variant.variant_value).toLowerCase()),
+      variants.map((variant) =>
+        (variant.size ?? variant.variant_value).toLowerCase(),
+      ),
     );
     const next = BANGLE_SIZES.find((size) => !used.has(size.label.toLowerCase()));
     if (!next) return;
     setVariants((prev) => [
       ...prev,
-      makeVariant(colour, hex, next.label, colourMeta(colour)?.image_url ?? null),
+      makeVariant(selectedColour, hex, next.label, meta?.image_url ?? null),
     ]);
   }
 
@@ -126,44 +143,41 @@ export function ColourVariantForm({ palette, product }: ColourVariantFormProps) 
     setVariants((prev) => prev.filter((variant) => variant.id !== id));
   }
 
-  function setImage(colour: string, imageUrl: string) {
+  function setImage(imageUrl: string) {
+    if (!selectedColour) return;
     setColourImages((prev) => {
       const others = prev.filter(
-        (img) => img.colour.toLowerCase() !== colour.toLowerCase(),
+        (image) => image.colour.toLowerCase() !== selectedColour.toLowerCase(),
       );
       return imageUrl.trim()
-        ? [...others, { colour, image_url: imageUrl.trim() }]
+        ? [...others, { colour: selectedColour, image_url: imageUrl.trim() }]
         : others;
     });
   }
 
-  const availablePalette = palette.filter(
-    (colour) =>
-      colour.is_active &&
-      !selectedColours.some(
-        (selected) => selected.toLowerCase() === colour.name.toLowerCase(),
-      ),
+  const submittedColours = selectedColour ? [selectedColour] : [];
+
+  const submittedVariants = selectedColour
+    ? variants.filter(
+        (variant) =>
+          !variant.colour ||
+          variant.colour.trim().toLowerCase() === selectedColour.trim().toLowerCase(),
+      )
+    : [];
+
+  const explicitImage = colourImages.find(
+    (image) => image.colour.toLowerCase() === selectedColour.toLowerCase(),
   );
+  const submittedImageUrl =
+    explicitImage?.image_url.trim() || colourMeta(selectedColour)?.image_url || "";
+  const submittedImages = submittedImageUrl
+    ? [{ colour: selectedColour, image_url: submittedImageUrl }]
+    : [];
 
-  const submittedColours = useMemo(() => {
-    // Include any variant colour that is not yet in the selected list so a
-    // legacy row is never orphaned on save.
-    const names = new Set(selectedColours);
-    for (const variant of variants) {
-      if (variant.colour) names.add(variant.colour);
-    }
-    return [...names];
-  }, [selectedColours, variants]);
-
-  const submittedImages = submittedColours
-    .map((colourName) => {
-      const explicit = colourImages.find(
-        (img) => img.colour.toLowerCase() === colourName.toLowerCase(),
-      );
-      const url = explicit?.image_url.trim() || colourMeta(colourName)?.image_url || "";
-      return url ? { colour: colourName, image_url: url } : null;
-    })
-    .filter((image): image is ColourImage => Boolean(image));
+  const imageValue =
+    explicitImage?.image_url ?? colourMeta(selectedColour)?.image_url ?? "";
+  const selectedMeta = colourMeta(selectedColour);
+  const selectedHex = selectedMeta?.hex_code ?? "#C9A227";
 
   return (
     <div className="space-y-4">
@@ -172,21 +186,19 @@ export function ColourVariantForm({ palette, product }: ColourVariantFormProps) 
         type="hidden"
         name="variants_json"
         value={JSON.stringify(
-          variants
-            .filter((variant) => !variant.colour || submittedColours.includes(variant.colour))
-            .map((variant) => ({
-              id: variant.id.startsWith("new-") ? undefined : variant.id,
-              variant_name: variant.variant_name,
-              variant_value: variant.size ?? variant.variant_value,
-              size: variant.size ?? variant.variant_value,
-              colour: variant.colour ?? null,
-              colour_hex: variant.colour_hex ?? null,
-              image_url: variant.image_url ?? null,
-              sku: variant.sku ?? null,
-              stock_quantity: variant.stock_quantity,
-              price_override: variant.price_override,
-              is_active: variant.is_active,
-            })),
+          submittedVariants.map((variant) => ({
+            id: variant.id.startsWith("new-") ? undefined : variant.id,
+            variant_name: variant.variant_name,
+            variant_value: variant.size ?? variant.variant_value,
+            size: variant.size ?? variant.variant_value,
+            colour: variant.colour ?? null,
+            colour_hex: variant.colour_hex ?? null,
+            image_url: variant.image_url ?? null,
+            sku: variant.sku ?? null,
+            stock_quantity: variant.stock_quantity,
+            price_override: variant.price_override,
+            is_active: variant.is_active,
+          })),
         )}
       />
       <input
@@ -195,17 +207,15 @@ export function ColourVariantForm({ palette, product }: ColourVariantFormProps) 
         value={JSON.stringify(submittedImages)}
       />
 
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="font-display text-lg font-semibold text-foreground">
-            Colours &amp; sizes
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pick colours from the category palette. Each colour has its own size
-            and stock rows, so shoppers only see sizes available in their colour.
-            Leave stock blank when the colour is made to order.
-          </p>
-        </div>
+      <div>
+        <h2 className="font-display text-lg font-semibold text-foreground">
+          Colour &amp; sizes
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Each Glass Bangles product is a single colour. Pick one colour from the
+          category palette, then set its size and stock rows. Leave stock blank
+          when the colour is made to order.
+        </p>
       </div>
 
       {palette.length === 0 ? (
@@ -214,14 +224,22 @@ export function ColourVariantForm({ palette, product }: ColourVariantFormProps) 
           Categories first.
         </p>
       ) : (
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            {availablePalette.map((colour) => (
+        <div className="flex flex-wrap gap-2">
+          {colourOptions.map((colour) => {
+            const selected =
+              colour.name.trim().toLowerCase() === selectedColour.trim().toLowerCase();
+            return (
               <button
                 key={colour.id}
                 type="button"
-                onClick={() => addColour(colour.name)}
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
+                aria-pressed={selected}
+                onClick={() => selectColour(colour.name)}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+                  selected
+                    ? "border-primary bg-primary/10 text-foreground"
+                    : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/5",
+                )}
               >
                 <span
                   aria-hidden="true"
@@ -229,108 +247,83 @@ export function ColourVariantForm({ palette, product }: ColourVariantFormProps) 
                   style={{ backgroundColor: colour.hex_code }}
                 />
                 {colour.name}
-                <Plus className="size-3.5" aria-hidden="true" />
+                {selected ? <Check className="size-3.5" aria-hidden="true" /> : null}
               </button>
-            ))}
-            {availablePalette.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Every active palette colour is already used by this product.
-              </p>
-            ) : null}
-          </div>
+            );
+          })}
+          {colourOptions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No active palette colours. Add one under Admin → Categories.
+            </p>
+          ) : null}
         </div>
       )}
 
-      <div className="space-y-4">
-        {selectedColours.map((colourName) => {
-          const meta = colourMeta(colourName);
-          const hex = meta?.hex_code ?? "#C9A227";
-          const rows = variants.filter((variant) => variant.colour === colourName);
-          const imageValue =
-            colourImages.find(
-              (img) => img.colour.toLowerCase() === colourName.toLowerCase(),
-            )?.image_url ??
-            meta?.image_url ??
-            "";
-
-          return (
-            <section key={colourName} className="rounded-xl border border-border bg-card">
-              <header className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3">
-                <span
-                  aria-hidden="true"
-                  className="size-5 rounded-full border border-black/10"
-                  style={{ backgroundColor: hex }}
-                />
-                <h3 className="font-display text-base font-semibold text-foreground">
-                  {colourName}
-                </h3>
-                <div className="ml-auto flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addSize(colourName)}
-                    className="h-8 gap-1.5"
-                  >
-                    <Plus className="size-3.5" aria-hidden="true" />
-                    Add size
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeColour(colourName)}
-                    className="h-8 gap-1.5 text-destructive hover:bg-destructive/5"
-                  >
-                    <Trash2 className="size-3.5" aria-hidden="true" />
-                    Remove colour
-                  </Button>
-                </div>
-              </header>
-
-              <div className="space-y-3 p-4">
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor={`colour-image-${colourName}`}
-                    className="text-xs font-medium text-muted-foreground"
-                  >
-                    Colour image (optional)
-                  </label>
-                  <Input
-                    id={`colour-image-${colourName}`}
-                    value={imageValue}
-                    onChange={(event) => setImage(colourName, event.target.value)}
-                    placeholder="/images/products/colors/forest-green.jpg"
-                  />
-                </div>
-
-                {rows.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No sizes yet. Add at least one size to sell this colour.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {rows.map((variant) => (
-                      <VariantRow
-                        key={variant.id}
-                        variant={variant}
-                        onUpdate={updateVariant}
-                        onRemove={removeVariant}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            </section>
-          );
-        })}
-      </div>
-
-      {selectedColours.length === 0 ? (
+      {!selectedColour ? (
         <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-          No colours selected. Add a colour above to create its size rows.
+          Choose one colour above to create its size rows.
         </p>
-      ) : null}
+      ) : (
+        <section className="rounded-xl border border-border bg-card">
+          <header className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3">
+            <span
+              aria-hidden="true"
+              className="size-5 rounded-full border border-black/10"
+              style={{ backgroundColor: selectedHex }}
+            />
+            <h3 className="font-display text-base font-semibold text-foreground">
+              {selectedColour}
+            </h3>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              One colour per product
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addSize}
+              className="ml-auto h-8 gap-1.5"
+            >
+              <Plus className="size-3.5" aria-hidden="true" />
+              Add size
+            </Button>
+          </header>
+
+          <div className="space-y-3 p-4">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="colour-image"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                Colour image (optional)
+              </label>
+              <Input
+                id="colour-image"
+                value={imageValue}
+                onChange={(event) => setImage(event.target.value)}
+                placeholder="/images/products/colors/bng-159-forest-green.jpg"
+              />
+            </div>
+
+            {variants.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No sizes yet. Add at least one size to sell this colour.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {variants.map((variant) => (
+                  <VariantRow
+                    key={variant.id}
+                    variant={variant}
+                    onUpdate={updateVariant}
+                    onRemove={removeVariant}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

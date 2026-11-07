@@ -3700,8 +3700,7 @@
         "Maroon",
         "Red",
         "Rust Orange",
-        "Orange",
-        "Pista"
+        "Orange"
       ],
       "colour_images": [
         {
@@ -3730,11 +3729,7 @@
         },
         {
           "colour": "Orange",
-          "image_url": "/images/products/colors/bng-159-rust-orange.jpg"
-        },
-        {
-          "colour": "Pista",
-          "image_url": "/images/products/colors/bng-159-pista-green.jpg"
+          "image_url": "/images/products/colors/bng-159-orange.jpg"
         }
       ],
       "is_active": false,
@@ -3959,7 +3954,7 @@
       "category_id": "21c45a58-1868-5636-a6ca-f233f61f95b8",
       "name": "Raindrop Glass bangles – Forest Green",
       "slug": "raindrop-glass-bangles-forest-green",
-      "description": "Raindrop glass bangles available in eight colourways — forest green, pista, pink, maroon, red, rust orange and more — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
+      "description": "Raindrop glass bangles available in seven colourways — forest green, pista green, pink, maroon, red, rust orange and orange — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
       "sku": "BNG-159-FG",
       "price": 280,
       "compare_at_price": null,
@@ -3983,7 +3978,7 @@
       "legacy_image_source": "https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg",
       "sort_index": 152,
       "created_at": "2026-11-06T06:00:08.774Z",
-      "updated_at": "2026-11-06T06:00:08.776Z",
+      "updated_at": "2026-11-07T04:42:33.043Z",
       "variants": [
         {
           "id": "405555ae-6931-4d88-93f7-adad34446c88",
@@ -3999,7 +3994,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.042Z"
         },
         {
           "id": "97ae77af-28ec-4619-b9d7-66905bde0758",
@@ -4015,7 +4010,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.043Z"
         },
         {
           "id": "dff64768-0369-44e3-93e4-c12f59add886",
@@ -4031,7 +4026,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.043Z"
         },
         {
           "id": "5c1d2023-8eef-4c0c-9f65-b86fa9e87434",
@@ -4047,7 +4042,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.043Z"
         },
         {
           "id": "ad791b3e-5b81-44dd-b75b-146285423fe5",
@@ -4063,7 +4058,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.043Z"
         }
       ]
     },
@@ -4072,7 +4067,7 @@
       "category_id": "21c45a58-1868-5636-a6ca-f233f61f95b8",
       "name": "Raindrop Glass bangles – Pista Green",
       "slug": "raindrop-glass-bangles-pista-green",
-      "description": "Raindrop glass bangles available in eight colourways — forest green, pista, pink, maroon, red, rust orange and more — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
+      "description": "Raindrop glass bangles available in seven colourways — forest green, pista green, pink, maroon, red, rust orange and orange — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
       "sku": "BNG-159-PG",
       "price": 280,
       "compare_at_price": null,
@@ -4094,9 +4089,9 @@
       "seo_description": null,
       "legacy_id": "159",
       "legacy_image_source": "https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg",
-      "sort_index": 152,
+      "sort_index": 153,
       "created_at": "2026-11-06T06:00:08.776Z",
-      "updated_at": "2026-11-06T06:00:08.776Z",
+      "updated_at": "2026-11-07T04:42:33.044Z",
       "variants": [
         {
           "id": "77bf10b8-3913-48d2-829b-bed9eb5f3867",
@@ -4112,7 +4107,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.043Z"
         },
         {
           "id": "d8d5c4c3-fb15-4f25-b477-1e29a5fda27f",
@@ -4128,7 +4123,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.043Z"
         },
         {
           "id": "9a05d5e3-dd89-4e0d-a193-052018a478e7",
@@ -4144,7 +4139,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "c1ffa531-2073-45f9-8f06-ce642fff381a",
@@ -4160,7 +4155,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "a0baabb3-ea4e-4575-ab99-01db3eee083b",
@@ -4176,7 +4171,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         }
       ]
     },
@@ -4185,7 +4180,7 @@
       "category_id": "21c45a58-1868-5636-a6ca-f233f61f95b8",
       "name": "Raindrop Glass bangles – Pink",
       "slug": "raindrop-glass-bangles-pink",
-      "description": "Raindrop glass bangles available in eight colourways — forest green, pista, pink, maroon, red, rust orange and more — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
+      "description": "Raindrop glass bangles available in seven colourways — forest green, pista green, pink, maroon, red, rust orange and orange — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
       "sku": "BNG-159-PK",
       "price": 280,
       "compare_at_price": null,
@@ -4207,9 +4202,9 @@
       "seo_description": null,
       "legacy_id": "159",
       "legacy_image_source": "https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg",
-      "sort_index": 152,
+      "sort_index": 154,
       "created_at": "2026-11-06T06:00:08.776Z",
-      "updated_at": "2026-11-06T06:00:08.776Z",
+      "updated_at": "2026-11-07T04:42:33.044Z",
       "variants": [
         {
           "id": "35642186-41ba-4fae-a8b1-12c5a0716153",
@@ -4225,7 +4220,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "63950028-d4de-4ccc-abc4-f287a9ee3d81",
@@ -4241,7 +4236,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "4a300745-ad42-432f-b921-3c84db6c0cf7",
@@ -4257,7 +4252,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "a0ea030d-4b79-4793-89dc-06e247274041",
@@ -4273,7 +4268,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "1956445d-cb03-4a9b-8022-9ff1d80fef58",
@@ -4289,7 +4284,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         }
       ]
     },
@@ -4298,7 +4293,7 @@
       "category_id": "21c45a58-1868-5636-a6ca-f233f61f95b8",
       "name": "Raindrop Glass bangles – Maroon",
       "slug": "raindrop-glass-bangles-maroon",
-      "description": "Raindrop glass bangles available in eight colourways — forest green, pista, pink, maroon, red, rust orange and more — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
+      "description": "Raindrop glass bangles available in seven colourways — forest green, pista green, pink, maroon, red, rust orange and orange — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
       "sku": "BNG-159-MR",
       "price": 280,
       "compare_at_price": null,
@@ -4320,9 +4315,9 @@
       "seo_description": null,
       "legacy_id": "159",
       "legacy_image_source": "https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg",
-      "sort_index": 152,
+      "sort_index": 155,
       "created_at": "2026-11-06T06:00:08.776Z",
-      "updated_at": "2026-11-06T06:00:08.776Z",
+      "updated_at": "2026-11-07T04:42:33.044Z",
       "variants": [
         {
           "id": "ddd6f004-b51a-4e82-b177-21f836cc38c3",
@@ -4338,7 +4333,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "7f112e5e-d118-4935-88be-52f7116bcace",
@@ -4354,7 +4349,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "cc8a0a20-74c3-40d7-b977-dba57e79a1bc",
@@ -4370,7 +4365,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "ed0e568a-62ca-4d61-8da0-ae53f5a7536c",
@@ -4386,7 +4381,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "79572192-be07-43e4-9690-524076de9b64",
@@ -4402,7 +4397,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         }
       ]
     },
@@ -4411,7 +4406,7 @@
       "category_id": "21c45a58-1868-5636-a6ca-f233f61f95b8",
       "name": "Raindrop Glass bangles – Red",
       "slug": "raindrop-glass-bangles-red",
-      "description": "Raindrop glass bangles available in eight colourways — forest green, pista, pink, maroon, red, rust orange and more — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
+      "description": "Raindrop glass bangles available in seven colourways — forest green, pista green, pink, maroon, red, rust orange and orange — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
       "sku": "BNG-159-RD",
       "price": 280,
       "compare_at_price": null,
@@ -4433,9 +4428,9 @@
       "seo_description": null,
       "legacy_id": "159",
       "legacy_image_source": "https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg",
-      "sort_index": 152,
+      "sort_index": 156,
       "created_at": "2026-11-06T06:00:08.776Z",
-      "updated_at": "2026-11-06T06:00:08.776Z",
+      "updated_at": "2026-11-07T04:42:33.044Z",
       "variants": [
         {
           "id": "a60571c1-6def-4e4b-8e5d-29101b29bad5",
@@ -4451,7 +4446,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "c339c430-3912-4e44-b1d6-bd10bc8d4d86",
@@ -4467,7 +4462,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "8bf5153c-fb99-47aa-a5d4-40281f98651e",
@@ -4483,7 +4478,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "941aa2ed-1bbe-4bf3-b981-cdc4dd75eb98",
@@ -4499,7 +4494,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "16a9ba25-edcc-48c5-a530-c6d967c95624",
@@ -4515,7 +4510,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.776Z",
-          "updated_at": "2026-11-06T06:00:08.776Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         }
       ]
     },
@@ -4524,7 +4519,7 @@
       "category_id": "21c45a58-1868-5636-a6ca-f233f61f95b8",
       "name": "Raindrop Glass bangles – Rust Orange",
       "slug": "raindrop-glass-bangles-rust-orange",
-      "description": "Raindrop glass bangles available in eight colourways — forest green, pista, pink, maroon, red, rust orange and more — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
+      "description": "Raindrop glass bangles available in seven colourways — forest green, pista green, pink, maroon, red, rust orange and orange — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
       "sku": "BNG-159-RO",
       "price": 280,
       "compare_at_price": null,
@@ -4546,9 +4541,9 @@
       "seo_description": null,
       "legacy_id": "159",
       "legacy_image_source": "https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg",
-      "sort_index": 152,
+      "sort_index": 157,
       "created_at": "2026-11-06T06:00:08.776Z",
-      "updated_at": "2026-11-06T06:00:08.776Z",
+      "updated_at": "2026-11-07T04:42:33.044Z",
       "variants": [
         {
           "id": "9369bbe2-8210-432d-ae49-0515384fd632",
@@ -4564,7 +4559,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "df9cb69f-8014-4e09-879e-d274a39c8ddf",
@@ -4580,7 +4575,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "83e0cc0c-518b-4adc-bbb9-a7e7a51e8b00",
@@ -4596,7 +4591,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "14c88233-5e41-495b-84b2-fc49c39ffb58",
@@ -4612,7 +4607,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "b17875c2-1978-4701-a43a-f39b1488d501",
@@ -4628,7 +4623,7 @@
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         }
       ]
     },
@@ -4637,19 +4632,19 @@
       "category_id": "21c45a58-1868-5636-a6ca-f233f61f95b8",
       "name": "Raindrop Glass bangles – Orange",
       "slug": "raindrop-glass-bangles-orange",
-      "description": "Raindrop glass bangles available in eight colourways — forest green, pista, pink, maroon, red, rust orange and more — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
+      "description": "Raindrop glass bangles available in seven colourways — forest green, pista green, pink, maroon, red, rust orange and orange — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
       "sku": "BNG-159-OR",
       "price": 280,
       "compare_at_price": null,
       "stock_quantity": null,
-      "primary_image_url": "/images/products/colors/bng-159-rust-orange.jpg",
+      "primary_image_url": "/images/products/colors/bng-159-orange.jpg",
       "colours": [
         "Orange"
       ],
       "colour_images": [
         {
           "colour": "Orange",
-          "image_url": "/images/products/colors/bng-159-rust-orange.jpg"
+          "image_url": "/images/products/colors/bng-159-orange.jpg"
         }
       ],
       "is_active": true,
@@ -4659,9 +4654,9 @@
       "seo_description": null,
       "legacy_id": "159",
       "legacy_image_source": "https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg",
-      "sort_index": 152,
+      "sort_index": 158,
       "created_at": "2026-11-06T06:00:08.777Z",
-      "updated_at": "2026-11-06T06:00:08.777Z",
+      "updated_at": "2026-11-07T04:42:33.044Z",
       "variants": [
         {
           "id": "946815f2-bf8d-4ddb-961b-39b630860ab1",
@@ -4671,13 +4666,13 @@
           "size": "2.2",
           "colour": "Orange",
           "colour_hex": null,
-          "image_url": "/images/products/colors/bng-159-rust-orange.jpg",
+          "image_url": "/images/products/colors/bng-159-orange.jpg",
           "sku": null,
           "stock_quantity": null,
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "7dc5dcfc-dd27-4e6d-a832-3391a37b661a",
@@ -4687,13 +4682,13 @@
           "size": "2.4",
           "colour": "Orange",
           "colour_hex": null,
-          "image_url": "/images/products/colors/bng-159-rust-orange.jpg",
+          "image_url": "/images/products/colors/bng-159-orange.jpg",
           "sku": null,
           "stock_quantity": null,
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "5fe34a29-d7a7-4100-ac73-d246061db3c3",
@@ -4703,13 +4698,13 @@
           "size": "2.6",
           "colour": "Orange",
           "colour_hex": null,
-          "image_url": "/images/products/colors/bng-159-rust-orange.jpg",
+          "image_url": "/images/products/colors/bng-159-orange.jpg",
           "sku": null,
           "stock_quantity": null,
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "86c2b10c-5b3b-4ac3-8282-f26288c97279",
@@ -4719,13 +4714,13 @@
           "size": "2.8",
           "colour": "Orange",
           "colour_hex": null,
-          "image_url": "/images/products/colors/bng-159-rust-orange.jpg",
+          "image_url": "/images/products/colors/bng-159-orange.jpg",
           "sku": null,
           "stock_quantity": null,
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         },
         {
           "id": "aacb8b5c-6a5f-48e7-9ca3-ef8d620c1548",
@@ -4735,126 +4730,13 @@
           "size": "2.10",
           "colour": "Orange",
           "colour_hex": null,
-          "image_url": "/images/products/colors/bng-159-rust-orange.jpg",
+          "image_url": "/images/products/colors/bng-159-orange.jpg",
           "sku": null,
           "stock_quantity": null,
           "price_override": null,
           "is_active": true,
           "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
-        }
-      ]
-    },
-    {
-      "id": "360bb371-f4fd-45c8-b9a5-f85ca156fb67",
-      "category_id": "21c45a58-1868-5636-a6ca-f233f61f95b8",
-      "name": "Raindrop Glass bangles – Pista",
-      "slug": "raindrop-glass-bangles-pista",
-      "description": "Raindrop glass bangles available in eight colourways — forest green, pista, pink, maroon, red, rust orange and more — each finished with delicate raindrop detailing. Stack a few for a subtle look or wear the full set for poojas and family gatherings.",
-      "sku": "BNG-159-PS",
-      "price": 280,
-      "compare_at_price": null,
-      "stock_quantity": null,
-      "primary_image_url": "/images/products/colors/bng-159-pista-green.jpg",
-      "colours": [
-        "Pista"
-      ],
-      "colour_images": [
-        {
-          "colour": "Pista",
-          "image_url": "/images/products/colors/bng-159-pista-green.jpg"
-        }
-      ],
-      "is_active": true,
-      "is_featured": true,
-      "is_new_arrival": false,
-      "seo_title": null,
-      "seo_description": null,
-      "legacy_id": "159",
-      "legacy_image_source": "https://res.cloudinary.com/djgvh9eoc/image/upload/v1781003592/bangles/wffovi6drauqkbw87nq9.jpg",
-      "sort_index": 152,
-      "created_at": "2026-11-06T06:00:08.777Z",
-      "updated_at": "2026-11-06T06:00:08.777Z",
-      "variants": [
-        {
-          "id": "7d141748-8eb2-4d42-bdde-806f9c045e23",
-          "product_id": "360bb371-f4fd-45c8-b9a5-f85ca156fb67",
-          "variant_name": "Size",
-          "variant_value": "2.2",
-          "size": "2.2",
-          "colour": "Pista",
-          "colour_hex": null,
-          "image_url": "/images/products/colors/bng-159-pista-green.jpg",
-          "sku": null,
-          "stock_quantity": null,
-          "price_override": null,
-          "is_active": true,
-          "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
-        },
-        {
-          "id": "f59dd457-4b0c-4db6-8a92-23258a1571a9",
-          "product_id": "360bb371-f4fd-45c8-b9a5-f85ca156fb67",
-          "variant_name": "Size",
-          "variant_value": "2.4",
-          "size": "2.4",
-          "colour": "Pista",
-          "colour_hex": null,
-          "image_url": "/images/products/colors/bng-159-pista-green.jpg",
-          "sku": null,
-          "stock_quantity": null,
-          "price_override": null,
-          "is_active": true,
-          "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
-        },
-        {
-          "id": "dd1f997b-0b21-4482-ad6b-4008e01398bd",
-          "product_id": "360bb371-f4fd-45c8-b9a5-f85ca156fb67",
-          "variant_name": "Size",
-          "variant_value": "2.6",
-          "size": "2.6",
-          "colour": "Pista",
-          "colour_hex": null,
-          "image_url": "/images/products/colors/bng-159-pista-green.jpg",
-          "sku": null,
-          "stock_quantity": null,
-          "price_override": null,
-          "is_active": true,
-          "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
-        },
-        {
-          "id": "36184667-b79e-4ba0-9909-0f36f3bbbce7",
-          "product_id": "360bb371-f4fd-45c8-b9a5-f85ca156fb67",
-          "variant_name": "Size",
-          "variant_value": "2.8",
-          "size": "2.8",
-          "colour": "Pista",
-          "colour_hex": null,
-          "image_url": "/images/products/colors/bng-159-pista-green.jpg",
-          "sku": null,
-          "stock_quantity": null,
-          "price_override": null,
-          "is_active": true,
-          "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
-        },
-        {
-          "id": "ea54266b-10ab-465f-a264-ae2ffc8fe455",
-          "product_id": "360bb371-f4fd-45c8-b9a5-f85ca156fb67",
-          "variant_name": "Size",
-          "variant_value": "2.10",
-          "size": "2.10",
-          "colour": "Pista",
-          "colour_hex": null,
-          "image_url": "/images/products/colors/bng-159-pista-green.jpg",
-          "sku": null,
-          "stock_quantity": null,
-          "price_override": null,
-          "is_active": true,
-          "created_at": "2026-11-06T06:00:08.777Z",
-          "updated_at": "2026-11-06T06:00:08.777Z"
+          "updated_at": "2026-11-07T04:42:33.044Z"
         }
       ]
     }

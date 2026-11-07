@@ -5,6 +5,7 @@ export interface ShopFilterValue {
   q: string;
   category: string;
   colours: string[];
+  size: string;
   minPrice: string;
   maxPrice: string;
   inStock: boolean;
@@ -15,6 +16,7 @@ export const DEFAULT_SHOP_VALUE: ShopFilterValue = {
   q: "",
   category: "",
   colours: [],
+  size: "",
   minPrice: "",
   maxPrice: "",
   inStock: false,
@@ -43,6 +45,7 @@ export function parseShopValue(params: RawParams): ShopFilterValue {
     q: first(params.q).trim(),
     category: first(params.category).trim(),
     colours,
+    size: first(params.size).trim(),
     minPrice: first(params.minPrice).trim(),
     maxPrice: first(params.maxPrice).trim(),
     inStock: first(params.inStock) === "1" || first(params.inStock) === "true",
@@ -62,6 +65,7 @@ export function shopValueToFilters(value: ShopFilterValue, page = 1): ProductFil
     q: value.q || undefined,
     category: value.category || undefined,
     colour: value.colours.length ? value.colours : undefined,
+    size: value.size || undefined,
     minPrice: toNumber(value.minPrice),
     maxPrice: toNumber(value.maxPrice),
     inStock: value.inStock || undefined,
@@ -77,6 +81,7 @@ export function buildShopParams(value: ShopFilterValue): URLSearchParams {
   if (value.q) params.set("q", value.q);
   if (value.category) params.set("category", value.category);
   if (value.colours.length) params.set("colour", value.colours.join(","));
+  if (value.size) params.set("size", value.size);
   if (value.minPrice) params.set("minPrice", value.minPrice);
   if (value.maxPrice) params.set("maxPrice", value.maxPrice);
   if (value.inStock) params.set("inStock", "1");
