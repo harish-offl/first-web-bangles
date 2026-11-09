@@ -18,6 +18,9 @@ export const GLASS_COLOUR_PALETTE: GlassColour[] = [
   { name: "Red", hex: "#C62828" },
   { name: "Rust Orange", hex: "#B85C2E" },
   { name: "Orange", hex: "#F28C28" },
+  { name: "Peacock Blue", hex: "#006994" },
+  { name: "Mustard Yellow", hex: "#E4C441" },
+  { name: "Royal Blue", hex: "#4169E1" },
 ];
 
 const FALLBACK_HEX: Record<string, string> = {
@@ -37,6 +40,8 @@ const FALLBACK_HEX: Record<string, string> = {
   green: "#3F7A52",
   purple: "#6B4C8A",
   yellow: "#E4C441",
+  "peacock blue": "#006994",
+  "royal blue": "#4169E1",
 };
 
 /** Best-effort swatch colour for a palette name. */

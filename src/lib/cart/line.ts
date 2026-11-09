@@ -27,7 +27,7 @@ export function toCartLine(product: Product, options: ToCartLineOptions = {}): C
     productId: product.id,
     slug: product.slug,
     name: product.name,
-    imageUrl: product.primary_image_url ?? null,
+    imageUrl: variant?.image_url ?? product.primary_image_url ?? null,
     sku: variant?.sku ?? product.sku ?? null,
     unitPrice: (variant?.price_override ?? product.price) + surcharge,
     variantId: variant?.id ?? null,
