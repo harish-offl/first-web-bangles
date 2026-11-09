@@ -55,8 +55,13 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   delivery_fee_outside_tn: 100,
 };
 
+const FALLBACK_SITE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://www.banglesbybeauty.in"
+    : "http://localhost:3000";
+
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+  process.env.NEXT_PUBLIC_SITE_URL || FALLBACK_SITE_URL
 ).replace(/\/$/, "");
 
 export const SITE_NAME = DEFAULT_SETTINGS.store_name;

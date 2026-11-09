@@ -99,7 +99,7 @@ const listCategoriesCached = unstable_cache(
       product_count: counts.get(row.id) ?? 0,
     }));
   },
-  ["categories"],
+  ["categories", "v2"],
   { revalidate: 3600 },
 );
 
