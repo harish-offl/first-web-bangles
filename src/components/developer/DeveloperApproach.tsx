@@ -62,10 +62,10 @@ export function DeveloperApproach() {
         className="max-w-5xl mx-auto space-y-12"
       >
         <div className="text-center lg:text-left">
-          <p className="text-xs font-medium tracking-[0.22em] uppercase text-dev-accent">
+          <p className="text-xs font-medium tracking-[0.22em] uppercase text-primary">
             06 / My Approach
           </p>
-          <h2 className="font-display text-3xl sm:text-4xl font-medium text-foreground tracking-tight">
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-medium text-foreground tracking-tight">
             From Idea to Implementation.
           </h2>
         </div>
@@ -75,13 +75,13 @@ export function DeveloperApproach() {
             <motion.div
               key={step.number}
               variants={stepVariants.step}
-              className="p-6 rounded-xl border border-dev-accent/30 bg-dev-accent/5"
+              className="p-6 rounded-xl border border-gold/30 bg-accent transition-all hover:shadow-card hover:border-gold/50"
             >
-              <p className="font-display text-lg font-semibold text-dev-accent-foreground">
+              <p className="font-display text-2xl font-semibold text-gold">
                 {step.number}
               </p>
-              <h3 className="mt-2 font-medium text-foreground">{step.title}</h3>
-              <p className="mt-2 text-sm text-secondary-foreground leading-relaxed">
+              <h3 className="mt-3 text-lg font-semibold text-foreground">{step.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                 {step.description}
               </p>
             </motion.div>

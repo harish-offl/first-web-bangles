@@ -66,10 +66,10 @@ export function DeveloperSkills() {
         className="max-w-5xl mx-auto space-y-12"
       >
         <div className="text-center lg:text-left">
-          <p className="text-xs font-medium tracking-[0.22em] uppercase text-dev-accent">
+          <p className="text-xs font-medium tracking-[0.22em] uppercase text-primary">
             02 / Expertise
           </p>
-          <h2 className="font-display text-3xl sm:text-4xl font-medium text-foreground tracking-tight">
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-medium text-foreground tracking-tight">
             Tools I Use to Build Digital Experiences.
           </h2>
         </div>
@@ -90,7 +90,7 @@ export function DeveloperSkills() {
                     key={skill}
                     whileHover={{ scale: 1.05 }}
                     variants={skillVariants.skill}
-                    className="px-3 py-1.5 rounded-lg border border-dev-accent/40 bg-dev-accent/5 text-xs font-medium text-dev-accent-foreground transition-colors hover:bg-dev-accent hover:text-dev-accent-foreground"
+                    className="px-3 py-2 rounded-lg border border-gold/30 bg-accent text-xs font-medium text-foreground transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-card"
                   >
                     {skill}
                   </motion.span>
@@ -100,8 +100,8 @@ export function DeveloperSkills() {
           ))}
         </div>
 
-        <div className="mt-8 flex items-center gap-2 text-sm font-medium text-secondary-foreground">
-          <Plus className="size-4 text-dev-accent" aria-hidden="true" />
+        <div className="mt-8 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <Plus className="size-4 text-gold" aria-hidden="true" />
           Open to learning new tools and technologies
         </div>
       </motion.div>

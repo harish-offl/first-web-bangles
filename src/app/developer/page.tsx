@@ -36,15 +36,17 @@ export const metadata: Metadata = {
 
 export default function DeveloperPage() {
   return (
-    <div className="min-h-screen bg-white text-[#080808]">
-      <DeveloperHero />
-      <AboutDeveloper />
-      <DeveloperSkills />
-      <ExperienceSection />
-      <SelectedProjects />
-      <AgencySection />
-      <DeveloperApproach />
-      <ContactSection />
+    <div className="min-h-screen bg-background">
+      <div className="container-page py-12 sm:py-16 lg:py-20">
+        <DeveloperHero />
+        <AboutDeveloper />
+        <DeveloperSkills />
+        <ExperienceSection />
+        <SelectedProjects />
+        <AgencySection />
+        <DeveloperApproach />
+        <ContactSection />
+      </div>
     </div>
   );
 }

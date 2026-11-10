@@ -60,13 +60,13 @@ export function AboutDeveloper() {
           <div className="space-y-3">
             <motion.p
               variants={aboutVariants.label}
-              className="text-xs font-medium tracking-[0.22em] uppercase text-dev-accent"
+              className="text-xs font-medium tracking-[0.22em] uppercase text-primary"
             >
               01 / About Me
             </motion.p>
             <motion.h2
               variants={aboutVariants.heading}
-              className="font-display text-3xl sm:text-4xl font-medium text-foreground tracking-tight"
+              className="font-display text-3xl sm:text-4xl lg:text-5xl font-medium text-foreground tracking-tight"
             >
               Technology Meets Creativity.
             </motion.h2>
@@ -77,9 +77,9 @@ export function AboutDeveloper() {
               <motion.div
                 key={n}
                 variants={aboutVariants.stat}
-                className="p-4 bg-dev-accent rounded-xl border border-dev-accent/30"
+                className="p-4 bg-gradient-to-br from-primary to-gold-hover rounded-xl border border-gold/30 shadow-card"
               >
-                <p className="text-sm font-medium text-dev-accent-foreground">
+                <p className="text-sm font-medium text-primary-foreground">
                   {n === 1 ? "Madurai, India" : "3+ Years Experience"}
                 </p>
               </motion.div>
@@ -89,7 +89,7 @@ export function AboutDeveloper() {
 
         <motion.div
           variants={aboutVariants.text}
-          className="max-w-2xl text-secondary-foreground leading-relaxed sm:text-base"
+          className="max-w-2xl text-muted-foreground leading-relaxed sm:text-base"
         >
           <p className="mb-6">
             I’m M. R. M. Annamalai, a Full-Stack Web Developer and creative

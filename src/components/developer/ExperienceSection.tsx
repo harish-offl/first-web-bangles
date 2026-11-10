@@ -40,10 +40,10 @@ export function ExperienceSection() {
         className="max-w-5xl mx-auto space-y-10"
       >
         <div className="text-center lg:text-left">
-          <p className="text-xs font-medium tracking-[0.22em] uppercase text-dev-accent">
+          <p className="text-xs font-medium tracking-[0.22em] uppercase text-primary">
             03 / Experience
           </p>
-          <h2 className="font-display text-3xl sm:text-4xl font-medium text-foreground tracking-tight">
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-medium text-foreground tracking-tight">
             Building, Learning & Creating.
           </h2>
         </div>
@@ -53,19 +53,19 @@ export function ExperienceSection() {
             <motion.div
               key={stat.value}
               variants={statVariants.item}
-              className="p-6 rounded-xl border border-dev-accent/30 bg-dev-accent/5 text-center sm:text-left"
+              className="p-6 rounded-xl border border-gold/30 bg-accent text-center sm:text-left transition-all hover:shadow-card"
             >
-              <p className="font-display text-3xl font-medium text-dev-accent-foreground leading-none">
+              <p className="font-display text-4xl font-semibold text-primary leading-none">
                 {stat.value}
               </p>
-              <p className="mt-2 text-sm text-secondary-foreground leading-relaxed">
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
                 {stat.label}
               </p>
             </motion.div>
           ))}
         </div>
 
-        <div className="mt-4 p-4 rounded-lg border border-dev-accent/20 bg-dev-accent/10 text-sm text-secondary-foreground">
+        <div className="mt-6 p-4 rounded-lg border border-gold/20 bg-brand-c100 text-sm text-muted-foreground">
           Verified details only. No invented employment history, client names, awards or certifications.
         </div>
       </motion.div>

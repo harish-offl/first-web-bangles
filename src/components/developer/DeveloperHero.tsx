@@ -94,8 +94,8 @@ export function DeveloperHero() {
               variants={heroVariants.label}
               className="inline-flex items-center gap-2"
             >
-              <Code2 className="size-4 text-dev-accent" aria-hidden="true" />
-              <span className="text-xs font-medium tracking-[0.22em] uppercase text-secondary-foreground">
+              <Code2 className="size-4 text-primary" aria-hidden="true" />
+              <span className="text-xs font-medium tracking-[0.22em] uppercase text-muted-foreground">
                 Personal Portfolio / Developer
               </span>
             </motion.div>
@@ -138,7 +138,7 @@ export function DeveloperHero() {
             >
               <Link
                 href="/developer#work"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-dev-accent-foreground bg-dev-accent-foreground px-6 py-3 text-xs font-medium text-dev-accent transition-colors hover:bg-dev-accent hover:text-dev-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dev-accent/50"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 Explore My Work
                 <span className="size-4" aria-hidden="true" />
@@ -147,7 +147,7 @@ export function DeveloperHero() {
                 href="https://linkedin.com/in/mrmannamalai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-dev-accent-foreground bg-transparent px-6 py-3 text-xs font-medium text-dev-accent-foreground transition-colors hover:bg-dev-accent-foreground hover:text-dev-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dev-accent/50"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-primary bg-transparent px-6 py-3 text-sm font-medium text-primary transition-all hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Connect on LinkedIn (opens in a new tab)"
               >
                 Connect With Me
@@ -156,14 +156,14 @@ export function DeveloperHero() {
 
             <motion.div
               variants={heroVariants.meta}
-              className="mt-10 flex flex-wrap items-center gap-6 text-xs font-medium text-secondary-foreground"
+              className="mt-10 flex flex-wrap items-center gap-6 text-xs font-medium text-muted-foreground"
             >
               <span className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-dev-accent-foreground" aria-hidden="true" />
+                <span className="size-1.5 rounded-full bg-gold" aria-hidden="true" />
                 Based in Madurai, India
               </span>
               <span className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-dev-accent-foreground" aria-hidden="true" />
+                <span className="size-1.5 rounded-full bg-gold" aria-hidden="true" />
                 Available for Freelance & Remote
               </span>
             </motion.div>
@@ -172,11 +172,11 @@ export function DeveloperHero() {
           <div className="relative">
             <motion.div
               variants={heroVariants.portrait}
-              className="relative size-64 sm:size-80 mx-auto lg:mx-0 overflow-hidden rounded-2xl border border-dev-accent/40 bg-dev-accent shadow-[0_20px_40px_-10px_rgba(159,18,57,0.15)]"
+              className="relative size-64 sm:size-80 mx-auto lg:mx-0 overflow-hidden rounded-2xl border-2 border-gold/30 bg-gradient-to-br from-primary to-gold-hover shadow-[var(--shadow-hover)]"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-dev-accent/5 via-dev-accent/10 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-gold/10 to-transparent" />
               <div
-                className="absolute inset-0 flex items-center justify-center text-3xl font-display font-medium text-dev-accent-foreground"
+                className="absolute inset-0 flex items-center justify-center text-4xl font-display font-semibold text-primary-foreground"
                 aria-hidden="true"
               >
                 MR

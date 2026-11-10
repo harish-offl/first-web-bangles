@@ -94,29 +94,29 @@ export function SelectedProjects() {
               key={project.title}
               whileHover={{ y: -4 }}
               variants={projectVariants.card}
-              className="group relative overflow-hidden rounded-xl border border-dev-accent/40 bg-dev-accent/5 p-6"
+              className="group relative overflow-hidden rounded-xl border border-gold/30 bg-card p-6 transition-all hover:shadow-hover"
             >
               <div className="flex flex-wrap items-start justify-between gap-2 mb-4">
-                <span className="text-xs font-medium text-dev-accent-foreground">
+                <span className="text-xs font-medium text-muted-foreground">
                   {project.category}
                 </span>
                 {project.badge && (
-                  <span className="text-[10px] font-medium tracking-[0.15em] uppercase text-dev-accent-foreground">
+                  <span className="px-2 py-1 rounded bg-primary text-[10px] font-medium tracking-[0.15em] uppercase text-primary-foreground">
                     {project.badge}
                   </span>
                 )}
               </div>
-              <h3 className="font-display text-lg font-medium text-foreground mb-3">
+              <h3 className="font-display text-xl font-medium text-foreground mb-3">
                 {project.title}
               </h3>
-              <p className="text-secondary-foreground text-sm leading-relaxed mb-4">
+              <p className="text-muted-foreground text-sm leading-relaxed mb-4">
                 {project.description}
               </p>
               <div className="flex flex-wrap gap-2 mb-6">
                 {project.technologies.map((tech) => (
                   <span
                     key={tech}
-                    className="px-2 py-1 rounded border border-dev-accent/40 bg-dev-accent/10 text-[10px] font-medium text-dev-accent-foreground"
+                    className="px-2 py-1 rounded border border-gold/30 bg-accent text-[11px] font-medium text-foreground"
                   >
                     {tech}
                   </span>
@@ -126,11 +126,11 @@ export function SelectedProjects() {
                 href={project.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-xs font-medium text-dev-accent-foreground hover:text-dev-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dev-accent/50"
+                className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label={`Visit ${project.title} website (opens in a new tab)`}
               >
                 Visit Website
-                <ExternalLink className="size-3.5" aria-hidden="true" />
+                <ExternalLink className="size-4" aria-hidden="true" />
               </Link>
             </motion.div>
           ))}
